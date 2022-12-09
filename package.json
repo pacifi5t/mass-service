@@ -4,10 +4,12 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "start": "node server",
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "check": "svelte-check --tsconfig ./tsconfig.json"
+    "check": "svelte-check --tsconfig ./tsconfig.json",
+    "clean": "rm -rf dist node_modules"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^1.1.0",
