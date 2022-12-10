@@ -1,31 +1,20 @@
-import { defineConfig } from 'vite';
-import { svelte } from '@sveltejs/vite-plugin-svelte';
-import { resolve } from 'path';
-import autoprefixer from 'autoprefixer';
-import tailwindcss from 'tailwindcss';
-import sveltePreprocess from 'svelte-preprocess';
-import makeAttractionsImporter from 'attractions/importer';
+import { defineConfig } from "vite";
+import { svelte } from "@sveltejs/vite-plugin-svelte";
+import autoprefixer from "autoprefixer";
+import tailwindcss from "tailwindcss";
+import sveltePreprocess from "svelte-preprocess";
 
-export default defineConfig(({ command, mode }) => {
+export default defineConfig(() => {
   return {
-    base: './',
+    base: "./",
     plugins: [
       svelte({
-        preprocess: sveltePreprocess({
-          scss: {
-            importer: makeAttractionsImporter({
-              themeFile: resolve('./src/theme.scss')
-            })
-          }
-        })
+        preprocess: sveltePreprocess()
       })
     ],
     css: {
       postcss: {
-        plugins: [
-          tailwindcss(),
-          autoprefixer()
-        ]
+        plugins: [tailwindcss(), autoprefixer()]
       }
     }
   };
