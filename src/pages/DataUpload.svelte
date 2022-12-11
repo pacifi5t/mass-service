@@ -71,10 +71,9 @@
   />
 </div>
 
-<!-- TODO: somehow center this -->
 {#if immutableData.length !== 0}
-  <div class="flex flex-row  mt-8">
-    <div class="overflow-auto" id="table">
+  <div class="flex flex-row mt-8">
+    <div class="overflow-auto flex-1" id="table">
       <Table {headers} items={tableItems} />
     </div>
     <div class="flex-1" id="anomalies" />

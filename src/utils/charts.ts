@@ -53,7 +53,7 @@ export function createDataChart(inputData: number[]) {
     .append("circle")
     .attr("cx", (d) => x(d.x))
     .attr("cy", (d) => y(d.y))
-    .attr("fill", () => "rgba(31, 41, 55, 100)")
+    .attr("fill", () => "#4300b0")
     .attr("r", 4);
 
   svg
@@ -68,5 +68,5 @@ export function createDataChart(inputData: number[]) {
     .attr("text-anchor", "end")
     .attr("y", 0)
     .attr("x", -margin.x / 2)
-    .text("x");
+    .text("e");
 }
