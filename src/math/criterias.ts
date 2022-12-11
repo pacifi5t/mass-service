@@ -145,3 +145,57 @@ export function testWilcoxonSignedRank(
   const u = (T - E) / Math.sqrt(D);
   return [Math.abs(u) <= normDistribQuan(1 - alpha / 2), u];
 }
+
+export function testMann(arr: number[], stat: number): [boolean, number] {
+  const n = arr.length;
+  const E = (n * (n - 1)) / 4;
+  const sigma = Math.sqrt(((2 * n + 5) * (n - 1) * n) / 72);
+  const u = (stat + 0.5 - E) / sigma;
+  return [Math.abs(u) <= normDistribQuan(1 - alpha / 2), u];
+}
+
+export function valueMannV(arr: number[]): number {
+  const n = arr.length;
+  const sorted = [0, ...arr].sort((a, b) => a - b);
+
+  const dArray = [];
+  for (let i = 1; i < n; i++) {
+    dArray.push(sorted[i] - sorted[i - 1]);
+  }
+
+  const dNormArray = dArray.map((elem, i) => (n - i + 1) * elem);
+
+  let V = 0;
+  for (let i = 0; i < n - 1; i++) {
+    const di = dNormArray[i];
+    for (let j = i + 1; j < n; j++) {
+      const dj = dNormArray[j];
+      if (di > dj) {
+        V += 1;
+      } else if (di === dj) {
+        V += 0.5;
+      }
+    }
+  }
+
+  return V;
+}
+
+export function valueMannW(arr: number[]): number {
+  const n = arr.length;
+  let W = 0;
+  
+  for (let i = 0; i < n - 1; i++) {
+    const ti = arr;
+    for (let j = i + 1; j < n; j++) {
+      const tj = arr;
+      if (ti < tj) {
+        W += 1;
+      } else if (ti === tj) {
+        W += 0.5;
+      }
+    }
+  }
+
+  return W;
+}
