@@ -1,5 +1,6 @@
 import DataUpload from "./pages/DataUpload.svelte";
 import Layout from "./components/Layout.svelte";
+import StreamTests from "./pages/StreamTests.svelte";
 
 class Route {
   name: string;
@@ -13,4 +14,7 @@ class Route {
   }
 }
 
-export const routes = [new Route("/", DataUpload)];
+export const routes = [
+  new Route("/", DataUpload),
+  new Route("/tests", StreamTests)
+];

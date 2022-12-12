@@ -8,3 +8,4 @@ export * from "./parameters";
 export * from "./series";
 export * from "./regression";
 export * from "./other";
+export * from "./streams";
