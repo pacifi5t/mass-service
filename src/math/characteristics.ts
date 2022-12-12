@@ -9,6 +9,11 @@ export function stdDev(array: number[], mean: number) {
   );
 }
 
+export function dispersion(arr: number[]) {
+  const m = mean(arr);
+  return Math.pow(stdDev(arr, m), 2);
+}
+
 export function median(array: number[]) {
   const sorted = [...array].sort((a, b) => a - b);
   return sorted.length % 2 != 0
