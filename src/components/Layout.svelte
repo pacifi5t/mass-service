@@ -1,5 +1,5 @@
 <script lang="ts">
-  export let currentRoute;
+  export let currentRoute: any;
 
   import { Route } from "svelte-router-spa";
   import NavItem from "./NavItem.svelte";
@@ -15,6 +15,7 @@
         <div class="ml-10 flex items-baseline space-x-4">
           <NavItem label="Data upload" href="/" {currentRoute} />
           <NavItem label="Stream tests" href="/tests" {currentRoute} />
+          <NavItem label="Intensity" href="/intensity" {currentRoute} />
         </div>
       </div>
       <span class="text-yellow-400 text-lg font-medium">
