@@ -6,6 +6,8 @@
   import { pretty } from "../utils/helpers";
   import plus from "../assets/plus-circle.svg";
   import minus from "../assets/minus-circle.svg";
+  import { onMount } from "svelte";
+  import { piecewiseChart } from "../utils/charts";
 
   const data = $immutableDataStore;
   let classCount = $classCountStore;
@@ -20,9 +22,11 @@
     { text: "dispersion", value: "d" }
   ];
 
-  if (data.length !== 0) {
-    classifyTau(classCount);
-  }
+  onMount(() => {
+    if (data.length !== 0) {
+      classifyTau(classCount);
+    }
+  });
 
   function classifyTau(classes: number) {
     items = [];
@@ -64,6 +68,9 @@
         d: pretty(mymath.dispersion(classifiedTau[i]))
       });
     }
+
+    console.log(streamIntesities);
+    piecewiseChart(data, streamIntesities, classes, width);
   }
 </script>
 
@@ -97,9 +104,7 @@
       <div>
         <Table {headers} {items} />
       </div>
-      <div>
-        <!-- TODO: build chart -->
-      </div>
+      <div id="intensity" />
     </div>
   </div>
 {/if}

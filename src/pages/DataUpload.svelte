@@ -76,7 +76,7 @@
     <div class="overflow-auto flex-1" id="table">
       <Table {headers} items={tableItems} />
     </div>
-    <div class="flex-1" id="anomalies" />
+    <div class="flex-1" id="data" />
   </div>
 {/if}
 
