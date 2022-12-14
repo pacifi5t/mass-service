@@ -7,7 +7,7 @@
   import plus from "../assets/plus-circle.svg";
   import minus from "../assets/minus-circle.svg";
   import { onMount } from "svelte";
-  import { piecewiseChart } from "../utils/charts";
+  import { piecewiseIntensityChart } from "../utils/charts";
 
   const data = $immutableDataStore;
   let classCount = $classCountStore;
@@ -70,7 +70,7 @@
     }
 
     console.log(streamIntesities);
-    piecewiseChart(data, streamIntesities, classes, width);
+    piecewiseIntensityChart(data, classifiedTau, streamIntesities, width);
   }
 </script>
 

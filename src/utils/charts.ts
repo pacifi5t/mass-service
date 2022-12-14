@@ -72,10 +72,10 @@ export function createDataChart(inputData: number[]) {
     .text("e");
 }
 
-export function piecewiseChart(
+export function piecewiseIntensityChart(
   tauArr: number[],
+  classifiedTau: number[][],
   intensities: number[],
-  classes: number,
   classWidth: number
 ) {
   try {
@@ -84,18 +84,46 @@ export function piecewiseChart(
     console.error(e);
   }
 
-  const confIntervals: [number, number][] = [];
-  for (let i = 0; i < intensities.length; i++) {
-    confIntervals.push();
-  }
-
   const tMin = d3.min<number>(tauArr);
   const tMax = d3.max<number>(tauArr);
-  const laMax = d3.max<number>(intensities);
 
   const margin = { x: 40, y: 40 };
   const width = 640 - margin.x * 2;
   const height = 480 - margin.y * 2;
+
+  const length = width / (classifiedTau.length - 1);
+  const data = [];
+  for (let i = 0; i < intensities.length; i++) {
+    const x1 = i * length;
+    data.push({
+      x1: x1,
+      x2: x1 + length,
+      y: intensities[i]
+    });
+  }
+
+  const confIntervals = [];
+  for (let i = 0; i < intensities.length; i++) {
+    const interval = mymath.intensityConfInterval(
+      intensities[i],
+      classifiedTau[i].length
+    );
+    confIntervals.push({
+      high: interval[1],
+      low: interval[0],
+      x: i * length,
+      width: i * length + length
+    });
+  }
+
+  const laMax = d3.max([
+    ...intensities,
+    ...confIntervals.flatMap((e) => [e.high, e.low]).flat()
+  ]);
+  const laMin = d3.min([
+    ...intensities,
+    ...confIntervals.flatMap((e) => [e.high, e.low]).flat()
+  ]);
 
   const svg = d3
     .select("#intensity")
@@ -110,7 +138,7 @@ export function piecewiseChart(
     .domain([tMin, tMax - classWidth])
     .range([0, width]);
 
-  const y = d3.scaleLinear().domain([0, laMax]).range([height, 0]);
+  const y = d3.scaleLinear().domain([laMin, laMax]).range([height, 0]);
 
   svg
     .append("g")
@@ -119,17 +147,18 @@ export function piecewiseChart(
 
   svg.append("g").call(d3.axisLeft(y));
 
-  const length = width / (classes - 1);
-  const data = [];
-  for (let i = 0; i < intensities.length; i++) {
-    const x1 = i * length;
-    data.push({
-      x1: x1,
-      x2: x1 + length,
-      y: intensities[i]
-    });
-  }
+  // Conf intervals
+  svg
+    .selectAll("rect")
+    .data(confIntervals)
+    .join("rect")
+    .attr("x", (d) => d.x)
+    .attr("y", (d) => y(d.high))
+    .attr("height", (d) => y(d.low) - y(d.high))
+    .attr("width", (d) => length)
+    .attr("fill", "#ccbce5");
 
+  // Intensities
   svg
     .selectAll("whatever")
     .data(data)
@@ -141,7 +170,17 @@ export function piecewiseChart(
     .attr("stroke", "#4300b0")
     .attr("stroke-width", 5);
 
-  // TODO: add confidence intervals
+  // Ticks
+  svg
+    .selectAll()
+    .data(data)
+    .join("line")
+    .attr("x1", (d) => d.x2)
+    .attr("x2", (d) => d.x2)
+    .attr("y1", (_) => 0)
+    .attr("y2", (_) => height)
+    .attr("stroke", "lightgrey")
+    .attr("stroke-width", 1);
 
   svg
     .append("text")
@@ -153,7 +192,7 @@ export function piecewiseChart(
   svg
     .append("text")
     .attr("text-anchor", "end")
-    .attr("y", 0)
+    .attr("y", -20)
     .attr("x", -margin.x / 2)
     .text("λ");
 }
