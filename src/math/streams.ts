@@ -25,7 +25,7 @@ export function streamIntesities(
   const streamIntesities = [];
   for (let i = 0; i < classes - 1; i++) {
     const temp = classifiedTau
-      .slice(0, i)
+      .slice(0, i + 1)
       .reduce((total, e) => total + e.length, 0);
     streamIntesities.push(classifiedTau[i].length / ((len - temp) * width));
   }

@@ -38,7 +38,7 @@
     items1 = [];
     const min = d3.min(data);
     const max = d3.max(data);
-    const width = (max - min) / classes;
+    const classWidth = (max - min) / classes;
 
     const classifiedTau: number[][] = new Array();
     for (let i = 0; i < classes; i++) {
@@ -48,7 +48,8 @@
     for (let i = 0; i < data.length; i++) {
       let elem = data[i];
       for (let j = 1; j <= classes; j++) {
-        if (width * j >= elem) {
+        const classLim = min + j * classWidth;
+        if (classLim >= elem) {
           classifiedTau[j - 1].push(elem);
           break;
         }
@@ -59,7 +60,7 @@
       data.length,
       classes,
       classifiedTau,
-      width
+      classWidth
     );
     for (let i = 0; i < classes - 1; i++) {
       const intensity = intensities[i];
@@ -75,9 +76,8 @@
       });
     }
 
-    console.log(intensities);
-    const [a, b] = approxFunc(data, intensities, width);
-    piecewiseIntensityChart(data, classifiedTau, intensities, width);
+    const [a, b] = approxFunc(data, intensities, classWidth);
+    piecewiseIntensityChart(data, classifiedTau, intensities, classWidth);
   }
 
   function approxFunc(
