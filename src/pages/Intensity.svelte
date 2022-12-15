@@ -14,12 +14,18 @@
 
   classCountStore.subscribe((value) => (classCount = value));
 
-  let items = [];
-  const headers = [
+  let items1 = [];
+  const headers1 = [
     { text: "class", value: "c" },
     { text: "intesity", value: "i" },
     { text: "conf interval", value: "l" },
     { text: "dispersion", value: "d" }
+  ];
+
+  let items2 = [];
+  const headers2 = [
+    { text: "Param a", value: "a" },
+    { text: "Param b", value: "b" }
   ];
 
   onMount(() => {
@@ -29,7 +35,7 @@
   });
 
   function classifyTau(classes: number) {
-    items = [];
+    items1 = [];
     const min = d3.min(data);
     const max = d3.max(data);
     const width = (max - min) / classes;
@@ -49,19 +55,19 @@
       }
     }
 
-    const streamIntesities = mymath.streamIntesities(
+    const intensities = mymath.streamIntesities(
       data.length,
       classes,
       classifiedTau,
       width
     );
     for (let i = 0; i < classes - 1; i++) {
-      const intensity = streamIntesities[i];
+      const intensity = intensities[i];
       const confInterval = mymath.intensityConfInterval(
         intensity,
         classifiedTau[i].length
       );
-      items.push({
+      items1.push({
         c: i + 1,
         l: `${pretty(confInterval[0])} ; ${pretty(confInterval[1])}`,
         i: pretty(intensity),
@@ -69,8 +75,24 @@
       });
     }
 
-    console.log(streamIntesities);
-    piecewiseIntensityChart(data, classifiedTau, streamIntesities, width);
+    console.log(intensities);
+    const [a, b] = approxFunc(data, intensities, width);
+    piecewiseIntensityChart(data, classifiedTau, intensities, width);
+  }
+
+  function approxFunc(
+    data: number[],
+    intensities: number[],
+    classWidth: number
+  ): [number, number] {
+    items2 = [];
+
+    const minTau = d3.min(data);
+    const a = mymath.approxP1(intensities, classWidth, minTau);
+    const b = mymath.approxP2(intensities, classWidth, minTau);
+
+    items2.push({ a: pretty(a), b: pretty(b) });
+    return [a, b];
   }
 </script>
 
@@ -102,7 +124,8 @@
     </div>
     <div class="grid grid-cols-2 gap-4">
       <div>
-        <Table {headers} {items} />
+        <Table headers={headers1} items={items1} />
+        <Table headers={headers2} items={items2} />
       </div>
       <div id="intensity" />
     </div>
