@@ -69,7 +69,7 @@ export function approxP2(
   tauMin: number
 ) {
   const sum1 = intensities.reduce(
-    (total, e, i) => total + Math.log(e) * t(i, classWidth, tauMin),
+    (total, e, i) => total + Math.log(e) * t(i + 1, classWidth, tauMin),
     0
   );
   const sum2 = intensities.reduce(
@@ -78,28 +78,33 @@ export function approxP2(
   );
   const sum3 = intensities.reduce((total, e) => total + Math.log(e), 0);
   const denom = denominator(intensities.length + 1, classWidth, tauMin);
-  return ((intensities.length + 1 - 1) * sum1 - sum2 * sum3) / denom;
+  return (intensities.length * sum1 - sum2 * sum3) / denom;
 }
 
 function denominator(classes: number, classWidth: number, tauMin: number) {
   const r = range(1, classes);
 
   const sum1 = r.reduce(
-    (total, e) => total + Math.pow(t(e, classWidth, tauMin), 2)
+    (total, e) => total + Math.pow(t(e, classWidth, tauMin), 2),
+    0
   );
   const sum2 = Math.pow(
-    r.reduce((total, e) => total + t(e, classWidth, tauMin)),
+    r.reduce((total, e) => total + t(e, classWidth, tauMin), 0),
     2
   );
 
   return (classes - 1) * sum1 - sum2;
 }
 
-function t(s: number, classWidth: number, tauMin: number) {
+export function t(s: number, classWidth: number, tauMin: number) {
   return tauMin + (s - 0.5) * classWidth;
 }
 
 export function approxIntensity(t: number, a: number, b: number) {
   const e = Math.E;
   return 1 - Math.pow(e, Math.pow(e, a) * (1 - Math.pow(e, b * t)));
+}
+
+export function intensityFn(t: number, a: number, b: number) {
+  return Math.pow(Math.E, a + b * t);
 }

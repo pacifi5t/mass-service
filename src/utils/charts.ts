@@ -92,10 +92,10 @@ export function piecewiseIntensityChart(
   const height = 480 - margin.y * 2;
 
   const length = width / (classifiedTau.length - 1);
-  const data = [];
+  const dataI = [];
   for (let i = 0; i < intensities.length; i++) {
     const x1 = i * length;
-    data.push({
+    dataI.push({
       x1: x1,
       x2: x1 + length,
       y: intensities[i]
@@ -114,6 +114,18 @@ export function piecewiseIntensityChart(
       x: i * length,
       width: i * length + length
     });
+  }
+
+  const sortedTau = [...tauArr].sort((a, b) => a - b);
+  const dataIA = [];
+  for (let i = 0; sortedTau[i] < tMax - classWidth; i++) {
+    const tau = sortedTau[i];
+    const res = mymath.intensityFn(
+      tau,
+      mymath.approxP1(intensities, classWidth, tMin),
+      mymath.approxP2(intensities, classWidth, tMin)
+    );
+    dataIA.push([tau, res]);
   }
 
   const laMax = d3.max([
@@ -138,7 +150,7 @@ export function piecewiseIntensityChart(
     .domain([tMin, tMax - classWidth])
     .range([0, width]);
 
-  const y = d3.scaleLinear().domain([laMin, laMax]).range([height, 0]);
+  const y = d3.scaleLinear().domain([0, laMax]).range([height, 0]);
 
   svg
     .append("g")
@@ -146,6 +158,18 @@ export function piecewiseIntensityChart(
     .call(d3.axisBottom(x));
 
   svg.append("g").call(d3.axisLeft(y));
+
+  // Ticks
+  svg
+    .selectAll()
+    .data(dataI)
+    .join("line")
+    .attr("x1", (d) => d.x2)
+    .attr("x2", (d) => d.x2)
+    .attr("y1", (_) => 0)
+    .attr("y2", (_) => height)
+    .attr("stroke", "lightgrey")
+    .attr("stroke-width", 1);
 
   // Conf intervals
   svg
@@ -161,7 +185,7 @@ export function piecewiseIntensityChart(
   // Intensities
   svg
     .selectAll("whatever")
-    .data(data)
+    .data(dataI)
     .join("line")
     .attr("x1", (d) => d.x1)
     .attr("x2", (d) => d.x2)
@@ -170,25 +194,30 @@ export function piecewiseIntensityChart(
     .attr("stroke", "#4300b0")
     .attr("stroke-width", 5);
 
-  // Ticks
-  svg
-    .selectAll()
-    .data(data)
-    .join("line")
-    .attr("x1", (d) => d.x2)
-    .attr("x2", (d) => d.x2)
-    .attr("y1", (_) => 0)
-    .attr("y2", (_) => height)
-    .attr("stroke", "lightgrey")
-    .attr("stroke-width", 1);
+  // Intensity approximation
+  const line = d3
+    .line()
+    .curve(d3.curveBasis)
+    .x((d) => x(d[0]))
+    .y((d) => y(d[1]));
 
+  svg
+    .append("path")
+    .datum(dataIA)
+    .attr("fill", "none")
+    .attr("stroke", "rgba(31, 41, 55, 100)")
+    .attr("stroke-width", 3)
+    .attr("stroke-linejoin", "round")
+    .attr("d", line);
+
+  // x label
   svg
     .append("text")
     .attr("text-anchor", "end")
     .attr("x", width)
     .attr("y", height + margin.y)
     .text("τ");
-
+  // y label
   svg
     .append("text")
     .attr("text-anchor", "end")
