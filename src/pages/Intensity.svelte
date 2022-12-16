@@ -7,7 +7,7 @@
   import plus from "../assets/plus-circle.svg";
   import minus from "../assets/minus-circle.svg";
   import { onMount } from "svelte";
-  import { piecewiseIntensityChart, approxFuncChart } from "../utils/charts";
+  import { piecewiseIntensityChart, approxFuncChart } from "../charts/charts";
 
   const data = $immutableDataStore;
   let classCount = $classCountStore;
@@ -79,7 +79,13 @@
     console.log(classifiedTau);
 
     approxFunc(data, intensities, classWidth);
-    piecewiseIntensityChart(data, classifiedTau, intensities, classWidth);
+    piecewiseIntensityChart(
+      "intensity",
+      data,
+      classifiedTau,
+      intensities,
+      classWidth
+    );
     getSignIntensities(intensities, classifiedTau);
   }
 
@@ -141,7 +147,7 @@
     const b = mymath.approxP2(intensities, classWidth, minTau);
 
     argItems.push({ a: pretty(a), b: pretty(b) });
-    approxFuncChart(data, a, b);
+    approxFuncChart("approx", data, { a, b });
   }
 </script>
 

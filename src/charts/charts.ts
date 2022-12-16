@@ -1,16 +1,19 @@
 import * as d3 from "d3";
 import * as mymath from "../math";
+import {
+  clearChildOf,
+  PlotSettings,
+  createCanvas,
+  addLabels,
+  addAxes
+} from ".";
 
-export function createDataChart(inputData: number[]) {
-  try {
-    document.getElementById("data").replaceChildren("");
-  } catch (e) {
-    console.error(e);
-  }
+export function createDataChart(id: string, inputData: number[]) {
+  clearChildOf(id);
 
-  const sMin = d3.min<number>(inputData);
-  const sMax = d3.max<number>(inputData);
-  const padding = (sMax - sMin) / 40;
+  const dataMin = d3.min<number>(inputData);
+  const dataMax = d3.max<number>(inputData);
+  const padding = (dataMax - dataMin) / 40;
 
   const data = [];
   for (let i = 0; i < inputData.length; i++) {
@@ -18,34 +21,20 @@ export function createDataChart(inputData: number[]) {
     data.push({ x: i, y: y });
   }
 
-  const margin = { x: 40, y: 40 },
-    width = 640 - margin.x * 2,
-    height = 480 - margin.y * 2;
-
-  const svg = d3
-    .select("#data")
-    .append("svg")
-    .attr("width", width + margin.x * 2)
-    .attr("height", height + margin.y * 2)
-    .append("g")
-    .attr("transform", `translate(${margin.x}, ${margin.y})`);
+  const s = new PlotSettings(640, 480, { x: 40, y: 40 });
+  const svg = createCanvas(id, s);
 
   const x = d3
     .scaleLinear()
     .domain([0, data.length - 1])
-    .range([0, width]);
+    .range([0, s.width]);
 
   const y = d3
     .scaleLinear()
-    .domain([sMin - padding, sMax + padding])
-    .range([height, 0]);
+    .domain([dataMin - padding, dataMax + padding])
+    .range([s.height, 0]);
 
-  svg
-    .append("g")
-    .attr("transform", `translate(0, ${height})`)
-    .call(d3.axisBottom(x));
-
-  svg.append("g").call(d3.axisLeft(y));
+  addAxes(svg, s, x, y);
 
   svg
     .selectAll("whatever")
@@ -57,41 +46,23 @@ export function createDataChart(inputData: number[]) {
     .attr("fill", () => "#4300b0")
     .attr("r", 4);
 
-  svg
-    .append("text")
-    .attr("text-anchor", "end")
-    .attr("x", width)
-    .attr("y", height + margin.y)
-    .text("№");
-
-  svg
-    .append("text")
-    .attr("text-anchor", "end")
-    .attr("y", 0)
-    .attr("x", -margin.x / 2)
-    .text("e");
+  addLabels(svg, s, "№", "e");
 }
 
 export function piecewiseIntensityChart(
+  id: string,
   tauArr: number[],
   classifiedTau: number[][],
   intensities: number[],
   classWidth: number
 ) {
-  try {
-    document.getElementById("intensity").replaceChildren("");
-  } catch (e) {
-    console.error(e);
-  }
+  clearChildOf(id);
+  const s = new PlotSettings(640, 480, { x: 40, y: 40 });
 
   const tMin = d3.min<number>(tauArr);
   const tMax = d3.max<number>(tauArr);
 
-  const margin = { x: 40, y: 40 };
-  const width = 640 - margin.x * 2;
-  const height = 480 - margin.y * 2;
-
-  const length = width / (classifiedTau.length - 1);
+  const length = s.width / (classifiedTau.length - 1);
   const dataI = [];
   for (let i = 0; i < intensities.length; i++) {
     const x1 = i * length;
@@ -133,27 +104,16 @@ export function piecewiseIntensityChart(
     ...confIntervals.flatMap((e) => [e.high, e.low]).flat()
   ]);
 
-  const svg = d3
-    .select("#intensity")
-    .append("svg")
-    .attr("width", width + margin.x * 2)
-    .attr("height", height + margin.y * 2)
-    .append("g")
-    .attr("transform", `translate(${margin.x}, ${margin.y})`);
+  const svg = createCanvas(id, s);
 
   const x = d3
     .scaleLinear()
     .domain([tMin, tMax - classWidth])
-    .range([0, width]);
+    .range([0, s.width]);
 
-  const y = d3.scaleLinear().domain([0, laMax]).range([height, 0]);
+  const y = d3.scaleLinear().domain([0, laMax]).range([s.height, 0]);
 
-  svg
-    .append("g")
-    .attr("transform", `translate(0, ${height})`)
-    .call(d3.axisBottom(x));
-
-  svg.append("g").call(d3.axisLeft(y));
+  addAxes(svg, s, x, y);
 
   // Ticks
   svg
@@ -163,7 +123,7 @@ export function piecewiseIntensityChart(
     .attr("x1", (d) => d.x2)
     .attr("x2", (d) => d.x2)
     .attr("y1", (_) => 0)
-    .attr("y2", (_) => height)
+    .attr("y2", (_) => s.height)
     .attr("stroke", "lightgrey")
     .attr("stroke-width", 1);
 
@@ -206,65 +166,37 @@ export function piecewiseIntensityChart(
     .attr("stroke-linejoin", "round")
     .attr("d", line);
 
-  // x label
-  svg
-    .append("text")
-    .attr("text-anchor", "end")
-    .attr("x", width)
-    .attr("y", height + margin.y)
-    .text("τ");
-  // y label
-  svg
-    .append("text")
-    .attr("text-anchor", "end")
-    .attr("y", -20)
-    .attr("x", -margin.x / 2)
-    .text("λ");
+  addLabels(svg, s, "τ", "λ");
 }
 
-export function approxFuncChart(tauArr: number[], a: number, b: number) {
-  try {
-    document.getElementById("approx").replaceChildren("");
-  } catch (e) {
-    console.error(e);
-  }
-
-  const tMin = d3.min<number>(tauArr);
-  const tMax = d3.max<number>(tauArr);
+export function approxFuncChart(
+  id: string,
+  tauArr: number[],
+  params: { a: number; b: number }
+) {
+  clearChildOf(id);
 
   const sorted = [...tauArr].sort((a, b) => a - b);
   const data = [];
   for (let i = 0; i < sorted.length; i++) {
     const elem = sorted[i];
-    data.push([elem, mymath.approxIntensity(elem, a, b)]);
+    data.push([elem, mymath.approxIntensity(elem, params.a, params.b)]);
   }
-  console.log(data);
 
-  const margin = { x: 40, y: 40 };
-  const width = 640 - margin.x * 2;
-  const height = 480 - margin.y * 2;
+  const s = new PlotSettings(640, 480, { x: 40, y: 40 });
+  const svg = createCanvas(id, s);
 
-  const svg = d3
-    .select("#approx")
-    .append("svg")
-    .attr("width", width + margin.x * 2)
-    .attr("height", height + margin.y * 2)
-    .append("g")
-    .attr("transform", `translate(${margin.x}, ${margin.y})`);
-
-  const x = d3.scaleLinear().domain([tMin, tMax]).range([0, width]);
+  const x = d3
+    .scaleLinear()
+    .domain([d3.min<number>(tauArr), d3.max<number>(tauArr)])
+    .range([0, s.width]);
 
   const y = d3
     .scaleLinear()
     .domain([0, d3.max<number>(data.map((e) => e[1]))])
-    .range([height, 0]);
+    .range([s.height, 0]);
 
-  svg
-    .append("g")
-    .attr("transform", `translate(0, ${height})`)
-    .call(d3.axisBottom(x));
-
-  svg.append("g").call(d3.axisLeft(y));
+  addAxes(svg, s, x, y);
 
   const line = d3
     .line()
@@ -281,18 +213,5 @@ export function approxFuncChart(tauArr: number[], a: number, b: number) {
     .attr("stroke-linejoin", "round")
     .attr("d", line);
 
-  // x label
-  svg
-    .append("text")
-    .attr("text-anchor", "end")
-    .attr("x", width)
-    .attr("y", height + margin.y)
-    .text("τ");
-  // y label
-  svg
-    .append("text")
-    .attr("text-anchor", "end")
-    .attr("y", -20)
-    .attr("x", -margin.x / 2)
-    .text("λ");
+  addLabels(svg, s, "τ", "λ");
 }

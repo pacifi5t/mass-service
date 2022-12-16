@@ -2,7 +2,7 @@
   import { FileDropzone, Table } from "attractions";
   import { fileStore, immutableDataStore } from "../utils/stores";
   import { pretty } from "../utils/helpers";
-  import { createDataChart } from "../utils/charts";
+  import { createDataChart } from "../charts/charts";
 
   const reader = new FileReader();
   const headers = [
@@ -33,8 +33,7 @@
         });
       }
 
-      setTimeout(() => createDataChart(immutableData), 5);
-      // console.log(tableItems)
+      setTimeout(() => createDataChart("data", immutableData), 5);
     }
   }
 </script>
