@@ -132,10 +132,6 @@ export function piecewiseIntensityChart(
     ...intensities,
     ...confIntervals.flatMap((e) => [e.high, e.low]).flat()
   ]);
-  const laMin = d3.min([
-    ...intensities,
-    ...confIntervals.flatMap((e) => [e.high, e.low]).flat()
-  ]);
 
   const svg = d3
     .select("#intensity")
@@ -204,6 +200,81 @@ export function piecewiseIntensityChart(
   svg
     .append("path")
     .datum(dataIA)
+    .attr("fill", "none")
+    .attr("stroke", "rgba(31, 41, 55, 100)")
+    .attr("stroke-width", 3)
+    .attr("stroke-linejoin", "round")
+    .attr("d", line);
+
+  // x label
+  svg
+    .append("text")
+    .attr("text-anchor", "end")
+    .attr("x", width)
+    .attr("y", height + margin.y)
+    .text("τ");
+  // y label
+  svg
+    .append("text")
+    .attr("text-anchor", "end")
+    .attr("y", -20)
+    .attr("x", -margin.x / 2)
+    .text("λ");
+}
+
+export function approxFuncChart(tauArr: number[], a: number, b: number) {
+  try {
+    document.getElementById("approx").replaceChildren("");
+  } catch (e) {
+    console.error(e);
+  }
+
+  const tMin = d3.min<number>(tauArr);
+  const tMax = d3.max<number>(tauArr);
+
+  const sorted = [...tauArr].sort((a, b) => a - b);
+  const data = [];
+  for (let i = 0; i < sorted.length; i++) {
+    const elem = sorted[i];
+    data.push([elem, mymath.approxIntensity(elem, a, b)]);
+  }
+  console.log(data);
+
+  const margin = { x: 40, y: 40 };
+  const width = 640 - margin.x * 2;
+  const height = 480 - margin.y * 2;
+
+  const svg = d3
+    .select("#approx")
+    .append("svg")
+    .attr("width", width + margin.x * 2)
+    .attr("height", height + margin.y * 2)
+    .append("g")
+    .attr("transform", `translate(${margin.x}, ${margin.y})`);
+
+  const x = d3.scaleLinear().domain([tMin, tMax]).range([0, width]);
+
+  const y = d3
+    .scaleLinear()
+    .domain([0, d3.max<number>(data.map((e) => e[1]))])
+    .range([height, 0]);
+
+  svg
+    .append("g")
+    .attr("transform", `translate(0, ${height})`)
+    .call(d3.axisBottom(x));
+
+  svg.append("g").call(d3.axisLeft(y));
+
+  const line = d3
+    .line()
+    .curve(d3.curveBasis)
+    .x((d) => x(d[0]))
+    .y((d) => y(d[1]));
+
+  svg
+    .append("path")
+    .datum(data)
     .attr("fill", "none")
     .attr("stroke", "rgba(31, 41, 55, 100)")
     .attr("stroke-width", 3)
