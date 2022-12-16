@@ -14,7 +14,7 @@
       <div class="md:block grow">
         <div class="ml-10 flex items-baseline space-x-4">
           <NavItem label="Data upload" href="/" {currentRoute} />
-          <NavItem label="Stream tests" href="/tests" {currentRoute} />
+          <NavItem label="Parameters" href="/params" {currentRoute} />
           <NavItem label="Intensity" href="/intensity" {currentRoute} />
         </div>
       </div>
