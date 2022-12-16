@@ -22,14 +22,3 @@ export function kurtosisDeviation(len: number) {
       ((len - 3) * (len - 2) * (len + 3) * (len + 5))
   );
 }
-
-// export function skewnessDeviation1(len: number) {
-//   return Math.sqrt((6 * (len - 2)) / ((len + 1) * (len + 3)));
-// }
-
-// export function kurtosisDeviation1(len: number) {
-//   return Math.sqrt(
-//     (24 * len * (len - 2) * (len - 3)) /
-//       (Math.pow(len + 1, 2) * (len + 3) * (len + 5))
-//   );
-// }
