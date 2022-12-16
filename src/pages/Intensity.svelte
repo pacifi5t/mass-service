@@ -14,16 +14,16 @@
 
   classCountStore.subscribe((value) => (classCount = value));
 
-  let items1 = [];
-  const headers1 = [
+  let intenItems = [];
+  const intenHeaders = [
     { text: "class", value: "c" },
     { text: "intesity", value: "i" },
     { text: "conf interval", value: "l" },
     { text: "dispersion", value: "d" }
   ];
 
-  let items2 = [];
-  const headers2 = [
+  let argItems = [];
+  const argHeaders = [
     { text: "Param a", value: "a" },
     { text: "Param b", value: "b" }
   ];
@@ -35,7 +35,7 @@
   });
 
   function classifyTau(classes: number) {
-    items1 = [];
+    intenItems = [];
     const min = d3.min(data);
     const max = d3.max(data);
     const classWidth = (max - min) / classes;
@@ -68,7 +68,7 @@
         intensity,
         classifiedTau[i].length
       );
-      items1.push({
+      intenItems.push({
         c: i + 1,
         l: `${pretty(confInterval[0])} ; ${pretty(confInterval[1])}`,
         i: pretty(intensity),
@@ -76,8 +76,57 @@
       });
     }
 
+    console.log(classifiedTau);
+
     approxFunc(data, intensities, classWidth);
     piecewiseIntensityChart(data, classifiedTau, intensities, classWidth);
+    getSignIntensities(intensities, classifiedTau);
+  }
+
+  function getSignIntensities(intensities: any[], classifiedTau: number[][]) {
+    const lambdas: mymath.Intensity[] = [];
+    for (let i = 0; i < intensities.length; i++) {
+      lambdas.push({
+        value: intensities[i],
+        classSize: classifiedTau[i].length
+      });
+    }
+
+    const significantIntesities = [];
+    let temp: mymath.Intensity = undefined;
+    for (let i = 0; i < lambdas.length; i++) {
+      const elem = lambdas[i];
+
+      if (temp === undefined) {
+        const elem2 = lambdas[i + 1];
+
+        if (elem2 === undefined) {
+          significantIntesities.push(elem);
+          break;
+        }
+
+        if (mymath.classesCanBeMerged(elem, elem2)) {
+          temp = mymath.significantIntensity(elem, elem2);
+          i++;
+        } else {
+          significantIntesities.push(elem);
+        }
+      } else {
+        if (mymath.classesCanBeMerged(elem, temp)) {
+          temp = mymath.significantIntensity(elem, temp);
+        } else {
+          significantIntesities.push(temp);
+          temp = undefined;
+          i--;
+        }
+      }
+    }
+
+    if (temp !== undefined) {
+      significantIntesities.push(temp);
+    }
+
+    console.log(significantIntesities);
   }
 
   function approxFunc(
@@ -85,13 +134,13 @@
     intensities: number[],
     classWidth: number
   ) {
-    items2 = [];
+    argItems = [];
 
     const minTau = d3.min(data);
     const a = mymath.approxP1(intensities, classWidth, minTau);
     const b = mymath.approxP2(intensities, classWidth, minTau);
 
-    items2.push({ a: pretty(a), b: pretty(b) });
+    argItems.push({ a: pretty(a), b: pretty(b) });
     approxFuncChart(data, a, b);
   }
 </script>
@@ -124,8 +173,8 @@
     </div>
     <div class="grid grid-cols-2 gap-4">
       <div>
-        <Table headers={headers1} items={items1} />
-        <Table headers={headers2} items={items2} />
+        <Table headers={intenHeaders} items={intenItems} />
+        <Table headers={argHeaders} items={argItems} />
       </div>
       <div>
         <div id="intensity" />

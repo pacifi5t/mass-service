@@ -1,5 +1,15 @@
 import { range } from "d3";
-import { pearsonDistribQuan, normQuan, alpha } from ".";
+import { pearsonDistribQuan, normQuan, alpha, studentDistribQuan } from ".";
+
+export class Intensity {
+  value: number;
+  classSize: number;
+
+  constructor(value: number, classSize: number) {
+    this.value = value;
+    this.classSize = classSize;
+  }
+}
 
 export function streamStat(width: number, classSize: number, len: number) {
   return classSize / (len * width);
@@ -107,4 +117,37 @@ export function approxIntensity(t: number, a: number, b: number) {
 
 export function intensityFn(t: number, a: number, b: number) {
   return Math.pow(Math.E, a + b * t);
+}
+
+export function tStat(lambda1: Intensity, lambda2: Intensity) {
+  const a = lambda2.value - lambda1.value;
+  const b = Math.sqrt(
+    (lambda1.classSize - 1) * Math.pow(lambda2.value, 2) +
+      (lambda2.classSize - 1) * Math.pow(lambda1.value, 2)
+  );
+  const c =
+    lambda1.classSize *
+    lambda2.classSize *
+    (lambda1.classSize + lambda2.classSize - 2);
+  const d = lambda1.classSize + lambda2.classSize;
+
+  return (a / b) * Math.sqrt(c / d);
+}
+
+export function significantIntensity(lambda1: Intensity, lambda2: Intensity) {
+  return new Intensity(
+    (lambda1.value * lambda1.classSize + lambda2.value * lambda2.classSize) /
+      (lambda1.classSize + lambda2.classSize),
+    lambda1.classSize + lambda2.classSize
+  );
+}
+
+export function classesCanBeMerged(lambda1: Intensity, lambda2: Intensity) {
+  const stat = Math.abs(tStat(lambda1, lambda2));
+  const quan = studentDistribQuan(
+    1 - alpha / 2,
+    lambda1.classSize + lambda2.classSize - 2
+  );
+  console.log(`stat: ${stat}, quan: ${quan}`);
+  return stat <= quan;
 }
