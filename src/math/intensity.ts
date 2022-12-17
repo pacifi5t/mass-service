@@ -106,10 +106,12 @@ export class Intensity {
 export class SignificantIntensities {
   intensities: Intensity[];
   limits: number[];
+  mergedClasses: number[][];
 
-  constructor(i: Intensity[], l: number[]) {
+  constructor(i: Intensity[], l: number[], m: number[][]) {
     this.intensities = i;
     this.limits = l;
+    this.mergedClasses = m;
   }
 
   public static fromClassifiedTau(classified: ClassifiedTau) {
@@ -161,7 +163,8 @@ export class SignificantIntensities {
 
     return new SignificantIntensities(
       significantIntesities,
-      this.calcClassLimits(classified, mergedClasses)
+      this.calcClassLimits(classified, mergedClasses),
+      mergedClasses
     );
   }
 

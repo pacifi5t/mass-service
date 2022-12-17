@@ -3,8 +3,8 @@ import {
   pearsonDistribQuan,
   normQuan,
   alpha,
-  studentDistribQuan,
-  Intensity
+  Intensity,
+  SignificantIntensities
 } from ".";
 
 export function streamStat(width: number, classSize: number, len: number) {
@@ -110,8 +110,7 @@ export function t(s: number, classWidth: number, tauMin: number) {
 }
 
 export function approxIntensity(t: number, a: number, b: number) {
-  const e = Math.E;
-  return 1 - Math.pow(e, Math.pow(e, a) * (1 - Math.pow(e, b * t)));
+  return 1 - Math.exp(Math.exp(a) * (1 - Math.exp(b * t)));
 }
 
 export function intensityFn(t: number, a: number, b: number) {
@@ -131,4 +130,30 @@ export function tStat(lambda1: Intensity, lambda2: Intensity) {
   const d = lambda1.classSize + lambda2.classSize;
 
   return (a / b) * Math.sqrt(c / d);
+}
+
+export function splineExp(tau: number, sigInt: SignificantIntensities) {
+  const r = sigInt.limits.length;
+
+  let classNum: number = undefined;
+  for (let i = 0; i < r; i++) {
+    const limit = sigInt.limits[i];
+    if (tau <= limit) {
+      classNum = i;
+      break;
+    }
+  }
+
+  if (classNum === 0) {
+    return 1 - Math.exp(-sigInt.intensities[0].value * tau);
+  }
+
+  let sum = 0;
+  for (let i = 0; i < r - 1; i++) {
+    const int1 = sigInt.intensities[i].value;
+    const int2 = sigInt.intensities[i + 1].value;
+    sum += (int1 - int2) * sigInt.limits[i];
+  }
+
+  return 1 - Math.exp(-sigInt.intensities[classNum].value * tau - sum);
 }

@@ -50,9 +50,11 @@
     console.log(classified);
 
     const params = approxFunc(classified);
-    piecewiseIntensityChart("intensity", tauArr, classified, params);
     const sig = math.SignificantIntensities.fromClassifiedTau(classified);
     console.log(sig);
+
+    piecewiseIntensityChart("intensity", tauArr, classified, sig, params);
+    approxFuncChart("approx", classified, sig, params);
   }
 
   function approxFunc(classified: math.ClassifiedTau) {
@@ -64,7 +66,6 @@
     const b = math.approxP2(intensities, classified.classWidth, minTau);
 
     argItems.push({ a: round(a), b: round(b) });
-    approxFuncChart("approx", classified, { a, b });
     return { a, b };
   }
 </script>

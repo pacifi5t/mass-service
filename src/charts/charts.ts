@@ -7,7 +7,7 @@ import {
   addLabels,
   addAxes
 } from ".";
-import type { ClassifiedTau } from "../math";
+import type { ClassifiedTau, SignificantIntensities } from "../math";
 
 export function createDataChart(id: string, inputData: number[]) {
   clearChildOf(id);
@@ -50,6 +50,7 @@ export function piecewiseIntensityChart(
   id: string,
   tauArr: number[],
   classified: math.ClassifiedTau,
+  sigInt: SignificantIntensities,
   params: { a: number; b: number }
 ) {
   clearChildOf(id);
@@ -73,6 +74,18 @@ export function piecewiseIntensityChart(
     e,
     math.intensityFn(e, params.a, params.b)
   ]);
+
+  let offset = 0;
+  const sigIntD = sigInt.intensities.map((e, i) => {
+    const mergedCount = sigInt.mergedClasses[i].length;
+    const o = {
+      x1: offset,
+      x2: offset + mergedCount * length,
+      y: e.value
+    };
+    offset += mergedCount * length;
+    return o;
+  });
 
   const laMax = d3.max([
     ...classified.intensities.map((e) => e.value),
@@ -127,6 +140,16 @@ export function piecewiseIntensityChart(
     .attr("y2", (d) => y(d.y))
     .attr("stroke", "#4300b0")
     .attr("stroke-width", 5);
+  svg
+    .selectAll("whatever")
+    .data(sigIntD)
+    .join("line")
+    .attr("x1", (d) => d.x1)
+    .attr("x2", (d) => d.x2)
+    .attr("y1", (d) => y(d.y))
+    .attr("y2", (d) => y(d.y))
+    .attr("stroke", "red")
+    .attr("stroke-width", 5);
 
   // Intensity approximation
   const line = d3
@@ -150,6 +173,7 @@ export function piecewiseIntensityChart(
 export function approxFuncChart(
   id: string,
   classified: ClassifiedTau,
+  sigInt: SignificantIntensities,
   params: { a: number; b: number }
 ) {
   clearChildOf(id);
@@ -158,7 +182,7 @@ export function approxFuncChart(
   const tMax = sorted[sorted.length - 1];
   const clamped = sorted.filter((e) => e <= tMax - classified.classWidth);
 
-  const data: [number, number][] = clamped.map((e) => [
+  const dataF: [number, number][] = clamped.map((e) => [
     e,
     math.approxIntensity(e, params.a, params.b)
   ]);
@@ -173,7 +197,7 @@ export function approxFuncChart(
 
   const y = d3
     .scaleLinear()
-    .domain([0, d3.max<number>(data.map((e) => e[1]))])
+    .domain([0, d3.max<number>([...dataF.map((e) => e[1]), 1])])
     .range([s.height, 0]);
 
   addAxes(svg, s, x, y);
@@ -186,12 +210,54 @@ export function approxFuncChart(
 
   svg
     .append("path")
-    .datum(data)
+    .datum(dataF)
     .attr("fill", "none")
     .attr("stroke", "rgba(31, 41, 55, 100)")
     .attr("stroke-width", 3)
     .attr("stroke-linejoin", "round")
     .attr("d", line);
 
-  addLabels(svg, s, "τ", "λ");
+  const dataSF: [number, number][][] = [];
+  for (let i = 0; i < sigInt.limits.length; i++) {
+    dataSF.push([]);
+  }
+
+  const tauArr = classified.taus.flat().sort((a, b) => a - b);
+  // const tauArr = d3.range(
+  //   classified.min(),
+  //   classified.max() - classified.classWidth,
+  //   0.1
+  // );
+  for (let i = 0; i < tauArr.length; i++) {
+    const tau = tauArr[i];
+    for (let j = 0; j < sigInt.limits.length; j++) {
+      const limit = sigInt.limits[j];
+      if (tau <= limit) {
+        dataSF[j].push([tau, math.splineExp(tau, sigInt)]);
+        break;
+      }
+    }
+  }
+  console.log(dataSF);
+
+  for (let i = 0; i < dataSF.length; i++) {
+    const data = dataSF[i];
+    svg
+      .append("path")
+      .datum(data)
+      .attr("fill", "none")
+      .attr("stroke", "red")
+      .attr("stroke-width", 3)
+      .attr("stroke-linejoin", "round")
+      .attr(
+        "d",
+        d3
+          .line()
+          .curve(d3.curveBasis)
+          .x((d) => x(d[0]))
+          .y((d) => y(d[1]))
+      );
+  }
+
+  addLabels(svg, s, "τ", "F");
 }
