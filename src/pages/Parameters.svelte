@@ -1,10 +1,9 @@
 <script lang="ts">
   import { Button, Table } from "attractions";
   import { classCountStore, immutableDataStore } from "../stores";
+  import ClassSwitcher from "../components/ClassSwitcher.svelte";
   import * as math from "../math";
   import { round } from "../math";
-  import plus from "../assets/plus-circle.svg";
-  import minus from "../assets/minus-circle.svg";
 
   const data = $immutableDataStore;
   let classCount = $classCountStore;
@@ -112,30 +111,7 @@
 
 {#if data.length !== 0}
   <div>
-    <div class="flex space-x-4">
-      <div class="flex space-x-4 flex-grow">
-        <span class="py-4 text-2xl font-medium">Class count</span>
-        <Button
-          on:click={() => {
-            classCountStore.update((old) => (old > 1 ? old - 1 : old));
-            classifyT(classCount);
-          }}
-        >
-          <img src={minus} alt="Sub" />
-        </Button>
-        {#if classCount >= 0}
-          <span class="py-4 text-2xl font-medium">{classCount}</span>
-        {/if}
-        <Button
-          on:click={() => {
-            classCountStore.update((old) => old + 1);
-            classifyT(classCount);
-          }}
-        >
-          <img src={plus} alt="Add" />
-        </Button>
-      </div>
-    </div>
+    <ClassSwitcher on:update={(event) => classifyT(event.detail)} />
     <div class="grid grid-cols-2 gap-4">
       <div>
         <Table headers={headers3} items={items3} />
