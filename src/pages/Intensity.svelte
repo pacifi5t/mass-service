@@ -1,14 +1,14 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { Button, Table } from "attractions";
+  import { Table } from "attractions";
   import * as d3 from "d3";
   import { classCountStore, immutableDataStore } from "../stores";
   import ClassSwitcher from "../components/ClassSwitcher.svelte";
   import * as math from "../math";
-  import { round } from "../math";
+  import { ClassifiedTau, round } from "../math";
   import { piecewiseIntensityChart, approxFuncChart } from "../charts/charts";
 
-  const data = $immutableDataStore;
+  const tauArr = $immutableDataStore;
   let classCount = $classCountStore;
 
   classCountStore.subscribe((value) => (classCount = value));
@@ -28,64 +28,30 @@
   ];
 
   onMount(() => {
-    if (data.length !== 0) {
+    if (tauArr.length !== 0) {
       classifyTau(classCount);
     }
   });
 
   function classifyTau(classes: number) {
     intenItems = [];
-    const min = d3.min(data);
-    const max = d3.max(data);
-    const classWidth = (max - min) / classes;
-
-    const classifiedTau: number[][] = new Array();
-    for (let i = 0; i < classes; i++) {
-      classifiedTau.push([]);
-    }
-
-    for (let i = 0; i < data.length; i++) {
-      let elem = data[i];
-      for (let j = 1; j <= classes; j++) {
-        const classLim = min + j * classWidth;
-        if (classLim >= elem) {
-          classifiedTau[j - 1].push(elem);
-          break;
-        }
-      }
-    }
-
-    const intensities = math.streamIntesities(
-      data.length,
-      classes,
-      classifiedTau,
-      classWidth
-    );
+    const classified = math.ClassifiedTau.fromTauArr(tauArr, classes);
     for (let i = 0; i < classes - 1; i++) {
-      const intensity = intensities[i];
-      const confInterval = math.intensityConfInterval(
-        intensity,
-        classifiedTau[i].length
-      );
       intenItems.push({
         c: i + 1,
-        l: `${round(confInterval[0])} ; ${round(confInterval[1])}`,
-        i: round(intensity),
-        d: round(math.dispersion(classifiedTau[i]))
+        l: `${round(classified.intenConfIntervals[i][0])} ; ${round(
+          classified.intenConfIntervals[i][1]
+        )}`,
+        i: round(classified.intensities[i].value),
+        d: round(math.dispersion(classified.taus[i]))
       });
     }
 
-    console.log(classifiedTau);
+    console.log(classified);
 
-    approxFunc(data, intensities, classWidth);
-    piecewiseIntensityChart(
-      "intensity",
-      data,
-      classifiedTau,
-      intensities,
-      classWidth
-    );
-    getSignIntensities(intensities, classifiedTau);
+    const params = approxFunc(classified);
+    piecewiseIntensityChart("intensity", tauArr, classified, params);
+    // getSignIntensities(intensities, classifiedTau);
   }
 
   function getSignIntensities(intensities: any[], classifiedTau: number[][]) {
@@ -134,23 +100,21 @@
     console.log(significantIntesities);
   }
 
-  function approxFunc(
-    data: number[],
-    intensities: number[],
-    classWidth: number
-  ) {
+  function approxFunc(classified: ClassifiedTau) {
     argItems = [];
 
-    const minTau = d3.min(data);
-    const a = math.approxP1(intensities, classWidth, minTau);
-    const b = math.approxP2(intensities, classWidth, minTau);
+    const minTau = d3.min(tauArr);
+    const intensities = classified.intensities.map((e) => e.value);
+    const a = math.approxP1(intensities, classified.classWidth, minTau);
+    const b = math.approxP2(intensities, classified.classWidth, minTau);
 
     argItems.push({ a: round(a), b: round(b) });
-    approxFuncChart("approx", data, { a, b });
+    approxFuncChart("approx", classified, { a, b });
+    return { a, b };
   }
 </script>
 
-{#if data.length !== 0}
+{#if tauArr.length !== 0}
   <div>
     <ClassSwitcher on:update={(event) => classifyTau(event.detail)} />
     <div class="grid grid-cols-2 gap-4">

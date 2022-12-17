@@ -1,5 +1,5 @@
 import * as d3 from "d3";
-import * as mymath from "../math";
+import * as math from "../math";
 import {
   clearChildOf,
   PlotSettings,
@@ -7,6 +7,7 @@ import {
   addLabels,
   addAxes
 } from ".";
+import type { ClassifiedTau } from "../math";
 
 export function createDataChart(id: string, inputData: number[]) {
   clearChildOf(id);
@@ -15,11 +16,7 @@ export function createDataChart(id: string, inputData: number[]) {
   const dataMax = d3.max<number>(inputData);
   const padding = (dataMax - dataMin) / 40;
 
-  const data = [];
-  for (let i = 0; i < inputData.length; i++) {
-    const y = inputData[i];
-    data.push({ x: i, y: y });
-  }
+  const data = inputData.map((e, i) => Object({ x: i, y: e }));
 
   const s = new PlotSettings(640, 480, { x: 40, y: 40 });
   const svg = createCanvas(id, s);
@@ -52,9 +49,8 @@ export function createDataChart(id: string, inputData: number[]) {
 export function piecewiseIntensityChart(
   id: string,
   tauArr: number[],
-  classifiedTau: number[][],
-  intensities: number[],
-  classWidth: number
+  classified: math.ClassifiedTau,
+  params: { a: number; b: number }
 ) {
   clearChildOf(id);
   const s = new PlotSettings(640, 480, { x: 40, y: 40 });
@@ -62,53 +58,35 @@ export function piecewiseIntensityChart(
   const tMin = d3.min<number>(tauArr);
   const tMax = d3.max<number>(tauArr);
 
-  const length = s.width / (classifiedTau.length - 1);
-  const dataI = [];
-  for (let i = 0; i < intensities.length; i++) {
+  const length = s.width / (classified.classCount() - 1);
+  const indensityD = classified.intensities.map((e, i) => {
     const x1 = i * length;
-    dataI.push({
-      x1: x1,
-      x2: x1 + length,
-      y: intensities[i]
-    });
-  }
+    return { x1, x2: x1 + length, y: e.value };
+  });
 
-  const confIntervals = [];
-  for (let i = 0; i < intensities.length; i++) {
-    const interval = mymath.intensityConfInterval(
-      intensities[i],
-      classifiedTau[i].length
-    );
-    confIntervals.push({
-      high: interval[1],
-      low: interval[0],
-      x: i * length,
-      width: i * length + length
-    });
-  }
+  const confIntervalD = classified.intenConfIntervals.map((e, i) =>
+    Object({ high: e[1], low: e[0], x: i * length, width: (i + 1) * length })
+  );
 
   const sortedTau = [...tauArr].sort((a, b) => a - b);
-  const dataIA = [];
-  for (let i = 0; sortedTau[i] < tMax - classWidth; i++) {
-    const tau = sortedTau[i];
-    const res = mymath.intensityFn(
-      tau,
-      mymath.approxP1(intensities, classWidth, tMin),
-      mymath.approxP2(intensities, classWidth, tMin)
-    );
-    dataIA.push([tau, res]);
-  }
+  const intenApproxD: [number, number][] = sortedTau.map((e) => [
+    e,
+    math.intensityFn(e, params.a, params.b)
+  ]);
 
   const laMax = d3.max([
-    ...intensities,
-    ...confIntervals.flatMap((e) => [e.high, e.low]).flat()
+    ...classified.intensities.map((e) => e.value),
+    ...confIntervalD.flatMap((e) => [e.high, e.low]).flat()
   ]);
 
   const svg = createCanvas(id, s);
 
   const x = d3
     .scaleLinear()
-    .domain([tMin, tMax - classWidth])
+    .domain([
+      tMin,
+      d3.max(tauArr.filter((e) => e <= tMax - classified.classWidth))
+    ])
     .range([0, s.width]);
 
   const y = d3.scaleLinear().domain([0, laMax]).range([s.height, 0]);
@@ -118,7 +96,7 @@ export function piecewiseIntensityChart(
   // Ticks
   svg
     .selectAll()
-    .data(dataI)
+    .data(indensityD)
     .join("line")
     .attr("x1", (d) => d.x2)
     .attr("x2", (d) => d.x2)
@@ -130,7 +108,7 @@ export function piecewiseIntensityChart(
   // Conf intervals
   svg
     .selectAll("rect")
-    .data(confIntervals)
+    .data(confIntervalD)
     .join("rect")
     .attr("x", (d) => d.x)
     .attr("y", (d) => y(d.high))
@@ -141,7 +119,7 @@ export function piecewiseIntensityChart(
   // Intensities
   svg
     .selectAll("whatever")
-    .data(dataI)
+    .data(indensityD)
     .join("line")
     .attr("x1", (d) => d.x1)
     .attr("x2", (d) => d.x2)
@@ -159,7 +137,7 @@ export function piecewiseIntensityChart(
 
   svg
     .append("path")
-    .datum(dataIA)
+    .datum(intenApproxD.filter((e) => e[0] <= tMax - classified.classWidth))
     .attr("fill", "none")
     .attr("stroke", "rgba(31, 41, 55, 100)")
     .attr("stroke-width", 3)
@@ -171,24 +149,26 @@ export function piecewiseIntensityChart(
 
 export function approxFuncChart(
   id: string,
-  tauArr: number[],
+  classified: ClassifiedTau,
   params: { a: number; b: number }
 ) {
   clearChildOf(id);
 
-  const sorted = [...tauArr].sort((a, b) => a - b);
-  const data = [];
-  for (let i = 0; i < sorted.length; i++) {
-    const elem = sorted[i];
-    data.push([elem, mymath.approxIntensity(elem, params.a, params.b)]);
-  }
+  const sorted = classified.taus.flat().sort((a, b) => a - b);
+  const tMax = sorted[sorted.length - 1];
+  const clamped = sorted.filter((e) => e <= tMax - classified.classWidth);
+
+  const data: [number, number][] = clamped.map((e) => [
+    e,
+    math.approxIntensity(e, params.a, params.b)
+  ]);
 
   const s = new PlotSettings(640, 480, { x: 40, y: 40 });
   const svg = createCanvas(id, s);
 
   const x = d3
     .scaleLinear()
-    .domain([d3.min<number>(tauArr), d3.max<number>(tauArr)])
+    .domain([clamped[0], d3.max(clamped)])
     .range([0, s.width]);
 
   const y = d3

@@ -1,15 +1,11 @@
 import { range } from "d3";
-import { pearsonDistribQuan, normQuan, alpha, studentDistribQuan } from ".";
-
-export class Intensity {
-  value: number;
-  classSize: number;
-
-  constructor(value: number, classSize: number) {
-    this.value = value;
-    this.classSize = classSize;
-  }
-}
+import {
+  pearsonDistribQuan,
+  normQuan,
+  alpha,
+  studentDistribQuan,
+  Intensity
+} from ".";
 
 export function streamStat(width: number, classSize: number, len: number) {
   return classSize / (len * width);
@@ -37,7 +33,10 @@ export function streamIntesities(
     const temp = classifiedTau
       .slice(0, i + 1)
       .reduce((total, e) => total + e.length, 0);
-    streamIntesities.push(classifiedTau[i].length / ((len - temp) * width));
+    const classSize = classifiedTau[i].length;
+    streamIntesities.push(
+      new Intensity(classSize / ((len - temp) * width), classSize)
+    );
   }
   return streamIntesities;
 }
