@@ -1,7 +1,7 @@
 <script lang="ts">
   import { FileDropzone, Table } from "attractions";
-  import { fileStore, immutableDataStore } from "../utils/stores";
-  import { pretty } from "../utils/helpers";
+  import { fileStore, immutableDataStore } from "../stores";
+  import { round } from "../math";
   import { createDataChart } from "../charts/charts";
 
   const reader = new FileReader();
@@ -29,7 +29,7 @@
       for (let i = 0; i < immutableData.length; i++) {
         tableItems.push({
           i: i.toString(),
-          e: pretty(immutableData[i])
+          e: round(immutableData[i])
         });
       }
 

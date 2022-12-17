@@ -1,12 +1,12 @@
 <script lang="ts">
-  import { classCountStore, immutableDataStore } from "../utils/stores";
-  import * as mymath from "../math";
+  import { onMount } from "svelte";
   import { Button, Table } from "attractions";
   import * as d3 from "d3";
-  import { pretty } from "../utils/helpers";
+  import { classCountStore, immutableDataStore } from "../stores";
+  import * as math from "../math";
+  import { round } from "../math";
   import plus from "../assets/plus-circle.svg";
   import minus from "../assets/minus-circle.svg";
-  import { onMount } from "svelte";
   import { piecewiseIntensityChart, approxFuncChart } from "../charts/charts";
 
   const data = $immutableDataStore;
@@ -56,7 +56,7 @@
       }
     }
 
-    const intensities = mymath.streamIntesities(
+    const intensities = math.streamIntesities(
       data.length,
       classes,
       classifiedTau,
@@ -64,15 +64,15 @@
     );
     for (let i = 0; i < classes - 1; i++) {
       const intensity = intensities[i];
-      const confInterval = mymath.intensityConfInterval(
+      const confInterval = math.intensityConfInterval(
         intensity,
         classifiedTau[i].length
       );
       intenItems.push({
         c: i + 1,
-        l: `${pretty(confInterval[0])} ; ${pretty(confInterval[1])}`,
-        i: pretty(intensity),
-        d: pretty(mymath.dispersion(classifiedTau[i]))
+        l: `${round(confInterval[0])} ; ${round(confInterval[1])}`,
+        i: round(intensity),
+        d: round(math.dispersion(classifiedTau[i]))
       });
     }
 
@@ -90,7 +90,7 @@
   }
 
   function getSignIntensities(intensities: any[], classifiedTau: number[][]) {
-    const lambdas: mymath.Intensity[] = [];
+    const lambdas: math.Intensity[] = [];
     for (let i = 0; i < intensities.length; i++) {
       lambdas.push({
         value: intensities[i],
@@ -99,7 +99,7 @@
     }
 
     const significantIntesities = [];
-    let temp: mymath.Intensity = undefined;
+    let temp: math.Intensity = undefined;
     for (let i = 0; i < lambdas.length; i++) {
       const elem = lambdas[i];
 
@@ -111,15 +111,15 @@
           break;
         }
 
-        if (mymath.classesCanBeMerged(elem, elem2)) {
-          temp = mymath.significantIntensity(elem, elem2);
+        if (math.classesCanBeMerged(elem, elem2)) {
+          temp = math.significantIntensity(elem, elem2);
           i++;
         } else {
           significantIntesities.push(elem);
         }
       } else {
-        if (mymath.classesCanBeMerged(elem, temp)) {
-          temp = mymath.significantIntensity(elem, temp);
+        if (math.classesCanBeMerged(elem, temp)) {
+          temp = math.significantIntensity(elem, temp);
         } else {
           significantIntesities.push(temp);
           temp = undefined;
@@ -143,10 +143,10 @@
     argItems = [];
 
     const minTau = d3.min(data);
-    const a = mymath.approxP1(intensities, classWidth, minTau);
-    const b = mymath.approxP2(intensities, classWidth, minTau);
+    const a = math.approxP1(intensities, classWidth, minTau);
+    const b = math.approxP2(intensities, classWidth, minTau);
 
-    argItems.push({ a: pretty(a), b: pretty(b) });
+    argItems.push({ a: round(a), b: round(b) });
     approxFuncChart("approx", data, { a, b });
   }
 </script>

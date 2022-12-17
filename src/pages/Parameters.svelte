@@ -1,8 +1,8 @@
 <script lang="ts">
-  import { classCountStore, immutableDataStore } from "../utils/stores";
-  import * as mymath from "../math";
   import { Button, Table } from "attractions";
-  import { pretty } from "../utils/helpers";
+  import { classCountStore, immutableDataStore } from "../stores";
+  import * as math from "../math";
+  import { round } from "../math";
   import plus from "../assets/plus-circle.svg";
   import minus from "../assets/minus-circle.svg";
 
@@ -67,12 +67,12 @@
 
     items3 = [];
     for (let i = 0; i < classes; i++) {
-      const streamStat = mymath.streamStat(
+      const streamStat = math.streamStat(
         width,
         classifiedStreams[i].length,
         tArray.length
       );
-      const confInterval = mymath.streamStatConfInterval(
+      const confInterval = math.streamStatConfInterval(
         streamStat,
         width,
         classifiedStreams[i].length,
@@ -80,31 +80,31 @@
       );
       items3.push({
         c: i + 1,
-        l: `${pretty(confInterval[0])} ; ${pretty(confInterval[1])}`,
-        u: pretty(streamStat),
-        d: pretty(mymath.dispersion(classifiedStreams[i]))
+        l: `${round(confInterval[0])} ; ${round(confInterval[1])}`,
+        u: round(streamStat),
+        d: round(math.dispersion(classifiedStreams[i]))
       });
     }
   }
 
   function runTests() {
-    const v = mymath.valueMannV(data);
-    const w = mymath.valueMannW(data);
-    let normQuan = Math.abs(mymath.normQuan);
+    const v = math.valueMannV(data);
+    const w = math.valueMannW(data);
+    let normQuan = Math.abs(math.normQuan);
 
-    const vTest = mymath.testMann(data, v);
+    const vTest = math.testMann(data, v);
     items1.push({
       v: v,
-      u: pretty(vTest[1]),
-      u2: pretty(normQuan),
+      u: round(vTest[1]),
+      u2: round(normQuan),
       c: `Stream is ${vTest[0] ? "" : "not"} simple`
     });
 
-    const wTest = mymath.testMann(data, w);
+    const wTest = math.testMann(data, w);
     items2.push({
       w: w,
-      u: pretty(wTest[1]),
-      u2: pretty(normQuan),
+      u: round(wTest[1]),
+      u2: round(normQuan),
       c: wTest[0] ? "No interval change trend" : "Interval change trend is here"
     });
   }
