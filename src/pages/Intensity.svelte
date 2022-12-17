@@ -5,7 +5,7 @@
   import { classCountStore, immutableDataStore } from "../stores";
   import ClassSwitcher from "../components/ClassSwitcher.svelte";
   import * as math from "../math";
-  import { ClassifiedTau, round } from "../math";
+  import { round } from "../math";
   import { piecewiseIntensityChart, approxFuncChart } from "../charts/charts";
 
   const tauArr = $immutableDataStore;
@@ -51,56 +51,11 @@
 
     const params = approxFunc(classified);
     piecewiseIntensityChart("intensity", tauArr, classified, params);
-    // getSignIntensities(intensities, classifiedTau);
+    const sig = math.SignificantIntensities.fromClassifiedTau(classified);
+    console.log(sig);
   }
 
-  function getSignIntensities(intensities: any[], classifiedTau: number[][]) {
-    const lambdas: math.Intensity[] = [];
-    for (let i = 0; i < intensities.length; i++) {
-      lambdas.push({
-        value: intensities[i],
-        classSize: classifiedTau[i].length
-      });
-    }
-
-    const significantIntesities = [];
-    let temp: math.Intensity = undefined;
-    for (let i = 0; i < lambdas.length; i++) {
-      const elem = lambdas[i];
-
-      if (temp === undefined) {
-        const elem2 = lambdas[i + 1];
-
-        if (elem2 === undefined) {
-          significantIntesities.push(elem);
-          break;
-        }
-
-        if (math.classesCanBeMerged(elem, elem2)) {
-          temp = math.significantIntensity(elem, elem2);
-          i++;
-        } else {
-          significantIntesities.push(elem);
-        }
-      } else {
-        if (math.classesCanBeMerged(elem, temp)) {
-          temp = math.significantIntensity(elem, temp);
-        } else {
-          significantIntesities.push(temp);
-          temp = undefined;
-          i--;
-        }
-      }
-    }
-
-    if (temp !== undefined) {
-      significantIntesities.push(temp);
-    }
-
-    console.log(significantIntesities);
-  }
-
-  function approxFunc(classified: ClassifiedTau) {
+  function approxFunc(classified: math.ClassifiedTau) {
     argItems = [];
 
     const minTau = d3.min(tauArr);

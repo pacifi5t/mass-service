@@ -132,21 +132,3 @@ export function tStat(lambda1: Intensity, lambda2: Intensity) {
 
   return (a / b) * Math.sqrt(c / d);
 }
-
-export function significantIntensity(lambda1: Intensity, lambda2: Intensity) {
-  return new Intensity(
-    (lambda1.value * lambda1.classSize + lambda2.value * lambda2.classSize) /
-      (lambda1.classSize + lambda2.classSize),
-    lambda1.classSize + lambda2.classSize
-  );
-}
-
-export function classesCanBeMerged(lambda1: Intensity, lambda2: Intensity) {
-  const stat = Math.abs(tStat(lambda1, lambda2));
-  const quan = studentDistribQuan(
-    1 - alpha / 2,
-    lambda1.classSize + lambda2.classSize - 2
-  );
-  console.log(`stat: ${stat}, quan: ${quan}`);
-  return stat <= quan;
-}
