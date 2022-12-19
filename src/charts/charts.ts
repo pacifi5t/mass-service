@@ -163,7 +163,7 @@ export function piecewiseIntensityChart(
     .datum(intenApproxD.filter((e) => e[0] <= tMax - classified.classWidth))
     .attr("fill", "none")
     .attr("stroke", "rgba(31, 41, 55, 100)")
-    .attr("stroke-width", 3)
+    .attr("stroke-width", 5)
     .attr("stroke-linejoin", "round")
     .attr("d", line);
 
@@ -213,7 +213,7 @@ export function approxFuncChart(
     .datum(dataF)
     .attr("fill", "none")
     .attr("stroke", "rgba(31, 41, 55, 100)")
-    .attr("stroke-width", 3)
+    .attr("stroke-width", 5)
     .attr("stroke-linejoin", "round")
     .attr("d", line);
 
@@ -247,7 +247,7 @@ export function approxFuncChart(
       .datum(data)
       .attr("fill", "none")
       .attr("stroke", "red")
-      .attr("stroke-width", 3)
+      .attr("stroke-width", 5)
       .attr("stroke-linejoin", "round")
       .attr(
         "d",
