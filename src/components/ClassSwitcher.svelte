@@ -17,7 +17,7 @@
     <span class="py-4 text-2xl font-medium">Class count</span>
     <Button
       on:click={() => {
-        classCountStore.update((old) => (old > 1 ? old - 1 : old));
+        classCountStore.update((old) => (old > 4 ? old - 1 : old));
         dispatch("update", classCount)
       }}
     >
@@ -28,7 +28,7 @@
     {/if}
     <Button
       on:click={() => {
-        classCountStore.update((old) => old + 1);
+        classCountStore.update((old) => (old < 10 ? old + 1 : old));
         dispatch("update", classCount)
       }}
     >

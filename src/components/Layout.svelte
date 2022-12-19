@@ -18,9 +18,6 @@
           <NavItem label="Intensity" href="/intensity" {currentRoute} />
         </div>
       </div>
-      <span class="text-yellow-400 text-lg font-medium">
-        Glory to Ukraine!
-      </span>
     </div>
   </div>
 </nav>

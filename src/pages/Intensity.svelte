@@ -80,7 +80,16 @@
       </div>
       <div>
         <div id="intensity" />
+        <div class="ml-8 pb-12">
+          <p class="text-indigo-800">- Piecewise intensity function</p>
+          <p class="text-red-500">- Probable piecewise intensity function</p>
+          <p>- Continuous intensity function</p>
+        </div>
         <div id="approx" />
+        <div class="ml-8 pb-12">
+          <p class="text-red-500">- Spline exp distribution function</p>
+          <p>- Exp distribution function</p>
+        </div>
       </div>
     </div>
   </div>
