@@ -66,13 +66,13 @@
 
     items3 = [];
     for (let i = 0; i < classes; i++) {
-      const streamStat = math.streamStat(
+      const streamParam = math.streamParam(
         width,
         classifiedStreams[i].length,
         tArray.length
       );
-      const confInterval = math.streamStatConfInterval(
-        streamStat,
+      const confInterval = math.streamParamConfInterval(
+        streamParam,
         width,
         classifiedStreams[i].length,
         tArray.length
@@ -80,7 +80,7 @@
       items3.push({
         c: i + 1,
         l: `${round(confInterval[0])} ; ${round(confInterval[1])}`,
-        u: round(streamStat),
+        u: round(streamParam),
         d: round(math.dispersion(classifiedStreams[i]))
       });
     }

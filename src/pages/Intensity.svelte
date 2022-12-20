@@ -21,6 +21,12 @@
     { text: "dispersion", value: "d" }
   ];
 
+  let sigIntItems = [];
+  const sigIntHeaders = [
+    { text: "sign intesity", value: "i" },
+    { text: "conf interval", value: "l" },
+  ];
+
   let argItems = [];
   const argHeaders = [
     { text: "Param a", value: "a" },
@@ -35,6 +41,8 @@
 
   function classifyTau(classes: number) {
     intenItems = [];
+    sigIntItems = [];
+
     const classified = math.ClassifiedTau.fromTauArr(tauArr, classes);
     for (let i = 0; i < classes - 1; i++) {
       intenItems.push({
@@ -47,11 +55,20 @@
       });
     }
 
-    console.log(classified);
+    // console.log(classified);
 
     const params = approxFunc(classified);
     const sig = math.SignificantIntensities.fromClassifiedTau(classified);
-    console.log(sig);
+    // console.log(sig);
+
+    for(let i = 0; i < sig.intensities.length; i++) {
+      const inten = sig.intensities[i];
+      const interval = math.intensityConfInterval(inten.value, inten.classSize);
+      sigIntItems.push({
+        i: round(inten.value),
+        l: `${round(interval[0])} ; ${round(interval[1])}`,
+      })
+    }
 
     piecewiseIntensityChart("intensity", tauArr, classified, sig, params);
     approxFuncChart("approx", classified, sig, params);
@@ -76,6 +93,7 @@
     <div class="grid grid-cols-2 gap-4">
       <div>
         <Table headers={intenHeaders} items={intenItems} />
+        <Table headers={sigIntHeaders} items={sigIntItems} />
         <Table headers={argHeaders} items={argItems} />
       </div>
       <div>

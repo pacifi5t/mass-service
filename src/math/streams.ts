@@ -7,11 +7,11 @@ import {
   SignificantIntensities
 } from ".";
 
-export function streamStat(width: number, classSize: number, len: number) {
+export function streamParam(width: number, classSize: number, len: number) {
   return classSize / (len * width);
 }
 
-export function streamStatConfInterval(
+export function streamParamConfInterval(
   stat: number,
   width: number,
   classSize: number,
