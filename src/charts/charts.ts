@@ -217,47 +217,34 @@ export function approxFuncChart(
     .attr("stroke-linejoin", "round")
     .attr("d", line);
 
-  const dataSF: [number, number][][] = [];
-  for (let i = 0; i < sigInt.limits.length; i++) {
-    dataSF.push([]);
-  }
-
+  const dataSF: [number, number][] = [];
   const tauArr = classified.taus.flat().sort((a, b) => a - b);
-  // const tauArr = d3.range(
-  //   classified.min(),
-  //   classified.max() - classified.classWidth,
-  //   0.1
-  // );
   for (let i = 0; i < tauArr.length; i++) {
     const tau = tauArr[i];
     for (let j = 0; j < sigInt.limits.length; j++) {
       const limit = sigInt.limits[j];
       if (tau <= limit) {
-        dataSF[j].push([tau, math.splineExp(tau, sigInt)]);
+        dataSF.push([tau, math.splineExp(tau, sigInt)]);
         break;
       }
     }
   }
-  console.log(dataSF);
 
-  for (let i = 0; i < dataSF.length; i++) {
-    const data = dataSF[i];
-    svg
-      .append("path")
-      .datum(data)
-      .attr("fill", "none")
-      .attr("stroke", "red")
-      .attr("stroke-width", 5)
-      .attr("stroke-linejoin", "round")
-      .attr(
-        "d",
-        d3
-          .line()
-          .curve(d3.curveBasis)
-          .x((d) => x(d[0]))
-          .y((d) => y(d[1]))
-      );
-  }
+  svg
+    .append("path")
+    .datum(dataSF)
+    .attr("fill", "none")
+    .attr("stroke", "red")
+    .attr("stroke-width", 5)
+    .attr("stroke-linejoin", "round")
+    .attr(
+      "d",
+      d3
+        .line()
+        .curve(d3.curveBasis)
+        .x((d) => x(d[0]))
+        .y((d) => y(d[1]))
+    );
 
   addLabels(svg, s, "τ", "F");
 }
