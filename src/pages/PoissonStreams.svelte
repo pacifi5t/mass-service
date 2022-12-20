@@ -41,13 +41,12 @@
 </script>
 
 {#if tauArr.length !== 0}
-  <div class="flex flex-row mt-8 overflow-auto justify-around" id="table">
+  <div class="grid grid-cols-3 mt-8 overflow-auto gap-8">
     {#each tableItems as items, i}
-      <div class="flex flex-col ml-10">
+      <div class="flex flex-col ml-10" id="table">
         <span>Stream {i + 1}</span>
         <Table {headers} {items} />
       </div>
-      <div></div>
     {/each}
     <div>
       <Table headers={statHeaders} items={statItems} />
