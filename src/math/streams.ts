@@ -157,3 +157,12 @@ export function splineExp(tau: number, sigInt: SignificantIntensities) {
 
   return 1 - Math.exp(-sigInt.intensities[classNum].value * tau - sum);
 }
+
+export function poissonUStat(s1: number[], s2: number[]) {
+  const n1 = s1.length;
+  const n2 = s2.length;
+  const t1 = s1.reduce((total, e) => total + e, 0);
+  const t2 = s2.reduce((total, e) => total + e, 0);
+
+  return (n1 / t1 - n2 / t2) / Math.sqrt(n1 / (t1 * t1) + n2 / (t2 * t2));
+}

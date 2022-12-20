@@ -2,6 +2,8 @@ import DataUpload from "./pages/DataUpload.svelte";
 import Layout from "./components/Layout.svelte";
 import StreamTests from "./pages/Parameters.svelte";
 import Intensity from "./pages/Intensity.svelte";
+import PoissonStreams from "./pages/PoissonStreams.svelte";
+
 
 class Route {
   name: string;
@@ -18,5 +20,6 @@ class Route {
 export const routes = [
   new Route("/", DataUpload),
   new Route("/params", StreamTests),
-  new Route("/intensity", Intensity)
+  new Route("/intensity", Intensity),
+  new Route("/poisson", PoissonStreams)
 ];

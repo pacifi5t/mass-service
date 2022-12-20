@@ -16,6 +16,7 @@
           <NavItem label="Data upload" href="/" {currentRoute} />
           <NavItem label="Parameters" href="/params" {currentRoute} />
           <NavItem label="Intensity" href="/intensity" {currentRoute} />
+          <NavItem label="Poisson streams" href="/poisson" {currentRoute} />
         </div>
       </div>
     </div>
