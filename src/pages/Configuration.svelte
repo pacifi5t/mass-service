@@ -1,12 +1,77 @@
 <script lang="ts">
-  import {range} from "d3";
-  import * as math from "../math";
+  import ConfigSlider from "../components/ConfigSlider.svelte";
+  import { demandsStore, demandsCountStore, configStore } from "../stores";
+  import { Config } from "../service-system";
+  import { Table } from "attractions";
 
-  
+  let items = [];
+  const headers = [
+    { text: "delay", value: "d" },
+    { text: "service time", value: "s" }
+  ];
 
-  let arr1 = range(20).map(() => math.modelExpRandomValue(0.5));
-  let arr2 = range(20).map(() => math.modelWeibullRandomValue(2.5, 1));
+  let len = $demandsCountStore;
+  let demands = $demandsStore.slice(0, len);
+  let { maxQueueLength, initialDemands, uptime, analysisPeriod } = $configStore;
 
-  console.log(arr1);
-  console.log(arr2);
+  $: {
+    demandsCountStore.set(len);
+    configStore.set(
+      new Config(maxQueueLength, initialDemands, uptime, analysisPeriod)
+    );
+
+    demands = $demandsStore.slice(0, len);
+    items = demands.map((e) => Object({ d: e.delay, s: e.serviceTime }));
+  }
 </script>
+
+<div class="grid grid-cols-2 gap-8 mt-8">
+  <div class="">
+    <ConfigSlider
+      bind:value={maxQueueLength}
+      min={5}
+      max={50}
+      step={1}
+      label={"Max queue length"}
+    />
+    <ConfigSlider
+      bind:value={initialDemands}
+      min={0}
+      max={50}
+      step={1}
+      label={"Initial demand count"}
+    />
+    <ConfigSlider
+      bind:value={uptime}
+      min={10}
+      max={200}
+      step={0.5}
+      label={"System uptime (T)"}
+    />
+    <ConfigSlider
+      bind:value={analysisPeriod}
+      min={1}
+      max={10}
+      step={0.1}
+      label={"Data gathering period (dt)"}
+    />
+  </div>
+  <div class="">
+    <ConfigSlider
+      bind:value={len}
+      min={10}
+      max={200}
+      step={1}
+      label={"Data size"}
+    />
+    <div class="overflow-auto" id="table">
+      <Table {items} {headers} />
+    </div>
+  </div>
+</div>
+
+<style>
+  #table {
+    max-height: 32em;
+  }
+</style>
