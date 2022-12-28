@@ -6,6 +6,7 @@ export * from "./quantiles";
 export * from "./parameters";
 export * from "./streams";
 export * from "./intensity";
+export * from "./distributions";
 
 export function round(num: number): number {
   return roundTo(num, 4);
