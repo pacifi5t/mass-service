@@ -26,12 +26,11 @@
   ];
 
   const config = $configStore;
-  const demands = $demandsStore.slice(0, $demandsCountStore);
+  const demands = $demandsStore
+    .slice(0, $demandsCountStore)
+    .filter((e) => e.pushTime < config.uptime);
 
-  const res = modelOneChannel(
-    config,
-    demands.filter((e) => e.pushTime < config.uptime)
-  );
+  const res = modelOneChannel(config, demands);
   console.table(demands);
   console.table(res.ops);
   console.log(res);
@@ -43,6 +42,7 @@
     res: ModelResults,
     analysisTimeArr: number[]
   ) {
+    const idleTimeArr = genIdleTimeArr(res, analysisTimeArr);
     for (let i = 0; i < analysisTimeArr.length; i++) {
       const time = analysisTimeArr[i];
       const ops = res.ops.filter((e) => e.startTime < time);
@@ -50,9 +50,7 @@
       const queue = queueStateAtTime(time, res);
 
       const serviced = res.ops.filter((e) => e.finishTime < time).length;
-      const idleTime = res.idleTimeArr
-        .slice(0, ops.length)
-        .reduce((total, e) => total + e, 0);
+      const idleTime = idleTimeArr[i];
       const idleProb = idleTime / time;
 
       const isLoaded = res.ops.filter(
@@ -77,6 +75,39 @@
         avgService: round(avgService)
       });
     }
+  }
+
+  function genIdleTimeArr(res: ModelResults, analysisTimeArr: number[]) {
+    const tempArr: number[] = [];
+
+    // Calc idleArr for each operation
+    for (let i = 0; i < res.ops.length; i++) {
+      const prev = res.ops[i - 1];
+      const prevFinish = prev == undefined ? 0 : prev.finishTime;
+      tempArr.push(res.ops[i].startTime - prevFinish);
+    }
+    console.log(tempArr);
+
+    // Calc idleArr for each analysis time
+    let buff = 0;
+    const idleTimeArr: number[] = [];
+    for (let i = 0; i < analysisTimeArr.length; i++) {
+      const time = analysisTimeArr[i];
+      const ops = res.ops.filter((e) => e.startTime < time);
+      
+      const idleTime = tempArr
+        .slice(0, ops.length)
+        .reduce((total, e) => total + e, 0);
+
+      if (ops.length == 0) {
+        idleTimeArr.push(time);
+        buff -= time;
+      } else {
+        idleTimeArr.push(idleTime + buff);
+        buff = 0;
+      }
+    }
+    return idleTimeArr;
   }
 
   function genAnalysisTimeArr() {

@@ -70,16 +70,10 @@ export class QueueState {
 export class ModelResults {
   ops: Operation[];
   queueStates: QueueState[];
-  idleTimeArr: number[];
 
-  constructor(
-    ops: Operation[],
-    queueStates: QueueState[],
-    idleTimeArr: number[]
-  ) {
+  constructor(ops: Operation[], queueStates: QueueState[]) {
     this.ops = ops;
     this.queueStates = queueStates;
-    this.idleTimeArr = idleTimeArr;
   }
 }
 
@@ -87,24 +81,13 @@ export function modelOneChannel(config: Config, demands: Demand[]) {
   const queueStates: QueueState[] = [];
   let queue: QueuedOp[] = [];
   const ops: Operation[] = [];
-  const idleTimeArr = range(demands.length).map(() => 0);
 
   for (let i = 0; i < demands.length; i++) {
     const time = demands[i].pushTime;
     const serviceTime = demands[i].serviceTime;
 
     queue = queue.filter((e) => e.startTime >= time);
-
-    // Get the finish time of previous demand
-    let prevFinishTime = 0;
-    if (queue.length !== 0) {
-      prevFinishTime = queue[queue.length - 1].finishTime;
-    } else {
-      const t = ops[i - 1]?.finishTime;
-      if (t !== undefined) {
-        prevFinishTime = t;
-      }
-    }
+    const prevFinishTime = i == 0 ? 0 : getPrevFinishTime(queue, ops);
 
     // Add demand to queue or service it
     if (prevFinishTime > time) {
@@ -116,10 +99,16 @@ export function modelOneChannel(config: Config, demands: Demand[]) {
       }
     } else {
       ops.push(new Operation(time, time + serviceTime, 0));
-      idleTimeArr[i] = time - prevFinishTime;
     }
 
     queueStates.push(new QueueState(time, queue));
   }
-  return new ModelResults(ops, queueStates, idleTimeArr);
+  return new ModelResults(ops, queueStates);
+}
+
+function getPrevFinishTime(queue: QueuedOp[], ops: Operation[]) {
+  if (queue.length !== 0) {
+    return queue[queue.length - 1].finishTime;
+  }
+  return ops[ops.length - 1]?.finishTime;
 }
