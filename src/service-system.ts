@@ -67,22 +67,19 @@ export class QueueState {
   }
 }
 
-export class Results {
+export class ModelResults {
   ops: Operation[];
   queueStates: QueueState[];
   idleTimeArr: number[];
-  notServiced: number;
 
   constructor(
     ops: Operation[],
     queueStates: QueueState[],
-    idleTimeArr: number[],
-    notServiced: number
+    idleTimeArr: number[]
   ) {
     this.ops = ops;
     this.queueStates = queueStates;
     this.idleTimeArr = idleTimeArr;
-    this.notServiced = notServiced;
   }
 }
 
@@ -91,17 +88,10 @@ export function modelOneChannel(config: Config, demands: Demand[]) {
   const queue: QueuedOp[] = [];
   const ops: Operation[] = [];
   const idleTimeArr = range(demands.length).map(() => 0);
-  let notServiced = 0;
 
   for (let i = 0; i < demands.length; i++) {
     const time = demands[i].pushTime;
     const serviceTime = demands[i].serviceTime;
-
-    if (config.uptime < time) {
-      notServiced += demands.length - i;
-      queueStates.push(new QueueState(time, queue));
-      break;
-    }
 
     // Clear the queue from already started or serviced demands
     for (let j = 0; j < queue.length; j++) {
@@ -123,9 +113,7 @@ export function modelOneChannel(config: Config, demands: Demand[]) {
 
     // Add demand to queue or service it
     if (prevFinishTime > time) {
-      if (queue.length >= config.maxQueueLength) {
-        notServiced += 1;
-      } else {
+      if (queue.length < config.maxQueueLength) {
         const finishTime = prevFinishTime + serviceTime;
         const queueAwaitTime = prevFinishTime - time;
         queue.push(new QueuedOp(time, prevFinishTime, finishTime));
@@ -138,5 +126,5 @@ export function modelOneChannel(config: Config, demands: Demand[]) {
 
     queueStates.push(new QueueState(time, queue));
   }
-  return new Results(ops, queueStates, idleTimeArr, notServiced);
+  return new ModelResults(ops, queueStates, idleTimeArr);
 }
