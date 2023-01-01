@@ -1,12 +1,13 @@
 <script lang="ts">
   import ConfigSlider from "../components/ConfigSlider.svelte";
   import { demandsStore, demandsCountStore, configStore } from "../stores";
+  import { round } from "../math";
   import { Config } from "../service-system";
   import { Table } from "attractions";
 
   let items = [];
   const headers = [
-    { text: "delay", value: "d" },
+    { text: "push time", value: "p" },
     { text: "service time", value: "s" }
   ];
 
@@ -21,7 +22,9 @@
     );
 
     demands = $demandsStore.slice(0, len);
-    items = demands.map((e) => Object({ d: e.delay, s: e.serviceTime }));
+    items = demands.map((e) =>
+      Object({ p: round(e.pushTime), s: round(e.serviceTime) })
+    );
   }
 </script>
 

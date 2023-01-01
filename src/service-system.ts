@@ -24,11 +24,11 @@ export class Config {
 }
 
 export class Demand {
-  delay: number;
+  pushTime: number;
   serviceTime: number;
 
-  constructor(delay: number, serviceTime: number) {
-    this.delay = delay;
+  constructor(pushTime: number, serviceTime: number) {
+    this.pushTime = pushTime;
     this.serviceTime = serviceTime;
   }
 }
@@ -86,19 +86,15 @@ export class Results {
   }
 }
 
-export function modelOneChannel(
-  config: Config,
-  demands: Demand[],
-  pushTimeArr: number[]
-) {
+export function modelOneChannel(config: Config, demands: Demand[]) {
   const queueStates: QueueState[] = [];
   const queue: QueuedOp[] = [];
   const ops: Operation[] = [];
   const idleTimeArr = range(demands.length).map(() => 0);
   let notServiced = 0;
 
-  for (let i = 0; i < pushTimeArr.length; i++) {
-    const time = pushTimeArr[i];
+  for (let i = 0; i < demands.length; i++) {
+    const time = demands[i].pushTime;
     const serviceTime = demands[i].serviceTime;
 
     if (config.uptime < time) {

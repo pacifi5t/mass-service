@@ -18,12 +18,9 @@
 
   const config = $configStore;
   const demands = $demandsStore.slice(0, $demandsCountStore);
-  const pushTimeArr = demands
-    .map((e) => e.delay)
-    .map((_, i, arr) => arr.slice(0, i + 1).reduce((total, e) => total + e));
 
-  const res = modelOneChannel(config, demands, pushTimeArr);
-  console.log(pushTimeArr);
+  const res = modelOneChannel(config, demands);
+  console.table(demands);
   console.table(res.ops);
   console.log(res);
 
