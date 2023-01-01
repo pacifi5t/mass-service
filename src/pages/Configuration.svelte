@@ -32,8 +32,8 @@
   <div class="">
     <ConfigSlider
       bind:value={maxQueueLength}
-      min={5}
-      max={50}
+      min={1}
+      max={20}
       step={1}
       label={"Max queue length"}
     />

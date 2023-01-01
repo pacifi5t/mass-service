@@ -19,7 +19,7 @@ export class Config {
   }
 
   public static default(): Config {
-    return new Config(5, 0, 20, 2);
+    return new Config(3, 0, 20, 2);
   }
 }
 
