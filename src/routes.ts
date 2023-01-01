@@ -1,6 +1,6 @@
 import Layout from "./components/Layout.svelte";
 import Configuration from "./pages/Configuration.svelte";
-import Calendar from "./pages/Calendar.svelte";
+import Stats from "./pages/Stats.svelte";
 
 class Route {
   name: string;
@@ -16,5 +16,5 @@ class Route {
 
 export const routes = [
   new Route("/", Configuration),
-  new Route("/calendar", Calendar),
+  new Route("/stats", Stats),
 ];

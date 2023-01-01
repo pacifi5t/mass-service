@@ -14,7 +14,7 @@
       <div class="md:block grow">
         <div class="ml-10 flex items-baseline space-x-4">
           <NavItem label="Configuration" href="/" {currentRoute} />
-          <NavItem label="Calendar" href="/calendar" {currentRoute} />
+          <NavItem label="Stats" href="/stats" {currentRoute} />
         </div>
       </div>
     </div>
