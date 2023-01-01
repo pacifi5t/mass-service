@@ -1,70 +1,71 @@
 <script lang="ts">
-  import { Operation, QueuedOp } from "../service-system";
+  import { Table } from "attractions";
+  import { range } from "d3";
+  import { Operation, QueuedOp, modelOneChannel } from "../service-system";
   import { demandsStore, demandsCountStore, configStore } from "../stores";
+
+  const items = [];
+  const headers = [
+    { text: "idle time", value: "it" },
+    { text: "idle prob", value: "ip" },
+    { text: "load time", value: "lt" },
+    { text: "load prob", value: "lp" },
+    { text: "serviced", value: "s" },
+    { text: "not serviced", value: "u" },
+    { text: "demands in system", value: "d" },
+    { text: "avg time in system", value: "a" }
+  ];
 
   const config = $configStore;
   const demands = $demandsStore.slice(0, $demandsCountStore);
-  const demandPushTimes = demands
+  const pushTimeArr = demands
     .map((e) => e.delay)
     .map((_, i, arr) => arr.slice(0, i + 1).reduce((total, e) => total + e));
-  const pushed: { pushTime: number; serviceTime: number }[] =
-    demandPushTimes.map((e, i) =>
-      Object({ pushTime: e, serviceTime: demands[i].serviceTime })
-    );
-  console.table(pushed);
 
-  const queue: QueuedOp[] = [];
-  const operations: Operation[] = [];
-  let demandsNotServiced = 0;
-  let workerIdleTime = 0;
+  const res = modelOneChannel(config, demands, pushTimeArr);
+  console.log(pushTimeArr);
+  console.table(res.ops);
+  console.log(res);
 
-  for (let i = 0; i < demandPushTimes.length; i++) {
-    const time = demandPushTimes[i];
-    const serviceTime = pushed[i].serviceTime;
+  //TODO: Finish this later
+  // const analysisCount = Math.ceil(config.uptime / config.analysisPeriod);
+  // const analysisTimes = range(analysisCount).map(
+  //   (e) => (e + 1) * config.analysisPeriod
+  // );
+  // analysisTimes.splice(analysisCount - 1, 1);
+  // analysisTimes.push(config.uptime);
 
-    if (config.uptime < time) {
-      demandsNotServiced += pushed.length - i;
-      break;
-    }
+  // function analyze(
+  //   time: number,
+  //   ops: Operation[],
+  //   queue: QueuedOp[],
+  //   idleTimes: number[]
+  // ) {
+  //   const servicedDemands = ops.filter((e) => e.finishTime < time).length;
+  //   const idleTime = idleTimes
+  //     .slice(0, ops.length)
+  //     .reduce((total, e) => total + e, 0);
+  //   const idleProb = idleTime / time;
+  //   const loadedTime = time - idleTime;
+  //   const loadedProb = 1 - idleProb;
+  //   const demandsInSystem = queue.length + 1;
+  //   const avg =
+  //     ops
+  //       .map((e, i) => e.queueAwaitTime + idleTimes[i])
+  //       .reduce((total, e) => total + e, 0) / ops.length;
 
-    // Clear the queue from already started or serviced demands
-    for (let j = 0; j < queue.length; j++) {
-      if (queue[j].startTime < time) {
-        queue.splice(j, 1);
-      }
-    }
+  //   items.push({
+  //     it: idleTime,
+  //     ip: idleProb,
+  //     lt: loadedTime,
+  //     lp: loadedProb,
+  //     s: servicedDemands,
+  //     u: demandsNotServiced,
+  //     d: demandsInSystem,
+  //     a: avg
+  //   });
 
-    // Get the finish time of previous demand
-    let prevFinishTime = 0;
-    if (queue.length !== 0) {
-      prevFinishTime = queue[queue.length - 1].finishTime;
-    } else {
-      const t = operations[i - 1]?.finishTime;
-      if (t !== undefined) {
-        prevFinishTime = t;
-      }
-    }
-
-    // Add demand to queue or service it
-    if (prevFinishTime > time) {
-      if (queue.length >= config.maxQueueLength) {
-        demandsNotServiced++;
-        continue;
-      }
-
-      const finishTime = prevFinishTime + serviceTime;
-      const queueAwaitTime = prevFinishTime - time;
-      queue.push(new QueuedOp(time, prevFinishTime, finishTime));
-      operations.push(
-        new Operation(prevFinishTime, finishTime, queueAwaitTime)
-      );
-    } else {
-      operations.push(new Operation(time, time + serviceTime, 0));
-      workerIdleTime += time - prevFinishTime;
-    }
-  }
-
-  console.table(operations);
-  console.log("Demands not serviced:", demandsNotServiced);
-  console.log("Worker idle time:", workerIdleTime);
+  // }
 </script>
+
+<Table {headers} {items} />
