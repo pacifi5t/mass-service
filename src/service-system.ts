@@ -85,7 +85,7 @@ export class ModelResults {
 
 export function modelOneChannel(config: Config, demands: Demand[]) {
   const queueStates: QueueState[] = [];
-  const queue: QueuedOp[] = [];
+  let queue: QueuedOp[] = [];
   const ops: Operation[] = [];
   const idleTimeArr = range(demands.length).map(() => 0);
 
@@ -93,12 +93,7 @@ export function modelOneChannel(config: Config, demands: Demand[]) {
     const time = demands[i].pushTime;
     const serviceTime = demands[i].serviceTime;
 
-    // Clear the queue from already started or serviced demands
-    for (let j = 0; j < queue.length; j++) {
-      if (queue[j].startTime < time) {
-        queue.splice(j, 1);
-      }
-    }
+    queue = queue.filter((e) => e.startTime >= time);
 
     // Get the finish time of previous demand
     let prevFinishTime = 0;
