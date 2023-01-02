@@ -38,13 +38,6 @@
       label={"Max queue length"}
     />
     <ConfigSlider
-      bind:value={initialDemands}
-      min={0}
-      max={50}
-      step={1}
-      label={"Initial demand count"}
-    />
-    <ConfigSlider
       bind:value={uptime}
       min={10}
       max={200}
@@ -57,6 +50,13 @@
       max={10}
       step={0.1}
       label={"Data gathering period (dt)"}
+    />
+    <ConfigSlider
+      bind:value={initialDemands}
+      min={0}
+      max={50}
+      step={1}
+      label={"Initial demand count"}
     />
   </div>
   <div class="">
