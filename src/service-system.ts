@@ -157,8 +157,10 @@ export function analyze(
     const queue = queueStateAtTime(time, res);
 
     const serviced = res.ops.filter((e) => e.finishTime < time).length;
-    const loadedTime = round(loadTimeArr[i]);
-    const loadedP = round(loadedTime / (time - timePrev));
+    const loadedTime = round(
+      loadTimeArr.slice(0, i + 1).reduce((total, e) => total + e, 0)
+    );
+    const loadedP = round(loadedTime / time);
 
     const isLoaded = res.ops.filter(
       (e) => e.startTime < time && e.finishTime > time
@@ -170,7 +172,7 @@ export function analyze(
 
     items.push({
       time,
-      idleTime: round(time - timePrev - loadedTime),
+      idleTime: round(time - loadedTime),
       loadedTime,
       idleP: round(1 - loadedP),
       loadedP,
