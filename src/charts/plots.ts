@@ -80,8 +80,8 @@ export function demandsPlot(id: string, items: AnalysisItem[]) {
 
   addAxes(svg, s, x, y);
   addLabels(svg, s, "t", "N");
-  plotLine(svg, x, y, serviced, "rgb(60, 180, 75)");
-  plotLine(svg, x, y, notServiced, "rgb(230, 25, 75)");
+  plotLine(svg, x, y, serviced, "rgb(0, 130, 200)");
+  plotLine(svg, x, y, notServiced, "rgb(245, 130, 48)");
   plotLine(svg, x, y, inSystem, "rgb(145, 30, 180)");
 }
 
@@ -108,7 +108,7 @@ export function averageTimePlot(id: string, items: AnalysisItem[]) {
 
   addAxes(svg, s, x, y);
   addLabels(svg, s, "t", "v");
-  plotLine(svg, x, y, queue, "rgb(60, 180, 75)");
-  plotLine(svg, x, y, service, "rgb(230, 25, 75)");
+  plotLine(svg, x, y, queue, "rgb(0, 130, 200)");
+  plotLine(svg, x, y, service, "rgb(245, 130, 48)");
   plotLine(svg, x, y, system, "rgb(145, 30, 180)");
 }

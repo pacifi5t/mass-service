@@ -43,16 +43,16 @@
   <div>
     <div id="serviced-not-system" />
     <div class="ml-8">
-      <p class="text-green-600">- Serviced</p>
-      <p class="text-red-500">- Not serviced</p>
+      <p class="text-blue-500">- Serviced</p>
+      <p class="text-orange-500">- Not serviced</p>
       <p class="text-indigo-800">- In system</p>
     </div>
   </div>
   <div>
     <div id="avg-time" />
     <div class="ml-8">
-      <p class="text-green-600">- Avg time in queue</p>
-      <p class="text-red-500">- Avg service time</p>
+      <p class="text-blue-500">- Avg time in queue</p>
+      <p class="text-orange-500">- Avg service time</p>
       <p class="text-indigo-800">- Avg time in system</p>
     </div>
   </div>

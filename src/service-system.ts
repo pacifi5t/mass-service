@@ -149,9 +149,6 @@ export function analyze(
 
   for (let i = 0; i < analysisTimeArr.length; i++) {
     const time = analysisTimeArr[i];
-    const timePrev =
-      analysisTimeArr[i - 1] === undefined ? 0 : analysisTimeArr[i - 1];
-
     const ops = res.ops.filter((e) => e.startTime < time);
     const demandsPushed = demands.filter((e) => e.pushTime < time).length;
     const queue = queueStateAtTime(time, res);
@@ -242,6 +239,7 @@ function calcLoadTimeArr(res: ModelResults, analysisTimeArr: number[]) {
   }
   return loadTimeArr;
 }
+
 function operationOverlapsTimeRange(
   op: Operation,
   tPrev: number,
