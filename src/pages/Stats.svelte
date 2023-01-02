@@ -62,7 +62,7 @@
       const { avgQueue, avgService, avgSystem } = calcAverages(ops);
 
       items.push({
-        time: time,
+        time,
         idleTime: round(idleTime),
         loadedTime: round(time - idleTime),
         idleP: round(idleProb),
@@ -83,7 +83,7 @@
     // Calc idleArr for each operation
     for (let i = 0; i < res.ops.length; i++) {
       const prev = res.ops[i - 1];
-      const prevFinish = prev == undefined ? 0 : prev.finishTime;
+      const prevFinish = prev === undefined ? 0 : prev.finishTime;
       tempArr.push(res.ops[i].startTime - prevFinish);
     }
 
@@ -98,6 +98,27 @@
         .reduce((total, e) => total + e, 0);
       idleTimeArr.push(ops.length == 0 ? time : idleTime);
     }
+
+    // Add idle time after last operation
+    let indexNoOps: number;
+    const lastOpFinishTime = res.ops[res.ops.length - 1].finishTime;
+    for (let i = 0; i < analysisTimeArr.length; i++) {
+      const time = analysisTimeArr[i];
+      if (time < lastOpFinishTime) {
+        continue;
+      }
+
+      idleTimeArr[i] += time - lastOpFinishTime;
+      indexNoOps = i + 1;
+      break;
+    }
+
+    for (let i = indexNoOps; i < analysisTimeArr.length; i++) {
+      const time = analysisTimeArr[i];
+      const prevTime = analysisTimeArr[i - 1];
+      idleTimeArr[i] = idleTimeArr[i - 1] + (time - prevTime);
+    }
+
     return idleTimeArr;
   }
 
