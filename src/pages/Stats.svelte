@@ -19,7 +19,7 @@
     { text: "load prob", value: "loadedP" },
     { text: "serviced", value: "serviced" },
     { text: "not serviced", value: "notServiced" },
-    { text: "in system", value: "demandsInSystem" },
+    { text: "in system", value: "inSystem" },
     { text: "avg in queue", value: "avgQueue" },
     { text: "avg in service", value: "avgService" },
     { text: "avg in system", value: "avgSystem" }
@@ -60,6 +60,7 @@
 
       const notServiced = demandsPushed - serviced - inSystem;
       const { avgQueue, avgService, avgSystem } = calcAverages(ops);
+      const isLast = i == analysisTimeArr.length - 1;
 
       items.push({
         time: time,
@@ -68,8 +69,8 @@
         idleP: round(idleProb),
         loadedP: round(1 - idleProb),
         serviced,
-        notServiced,
-        demandsInSystem: inSystem,
+        notServiced: isLast ? notServiced + inSystem : notServiced,
+        inSystem: isLast ? 0 : inSystem,
         avgSystem: round(avgSystem),
         avgQueue: round(avgQueue),
         avgService: round(avgService)
@@ -86,26 +87,17 @@
       const prevFinish = prev == undefined ? 0 : prev.finishTime;
       tempArr.push(res.ops[i].startTime - prevFinish);
     }
-    console.log(tempArr);
 
     // Calc idleArr for each analysis time
-    let buff = 0;
     const idleTimeArr: number[] = [];
     for (let i = 0; i < analysisTimeArr.length; i++) {
       const time = analysisTimeArr[i];
       const ops = res.ops.filter((e) => e.startTime < time);
-      
+
       const idleTime = tempArr
         .slice(0, ops.length)
         .reduce((total, e) => total + e, 0);
-
-      if (ops.length == 0) {
-        idleTimeArr.push(time);
-        buff -= time;
-      } else {
-        idleTimeArr.push(idleTime + buff);
-        buff = 0;
-      }
+      idleTimeArr.push(ops.length == 0 ? time : idleTime);
     }
     return idleTimeArr;
   }
