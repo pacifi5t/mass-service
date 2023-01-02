@@ -1,6 +1,20 @@
 import { range } from "d3";
 import { round } from "./math";
 
+export type AnalysisItem = {
+  time: number;
+  idleTime: number;
+  loadedTime: number;
+  idleP: number;
+  loadedP: number;
+  serviced: number;
+  notServiced: number;
+  inSystem: number;
+  avgSystem: number;
+  avgQueue: number;
+  avgService: number;
+};
+
 export class Config {
   maxQueueLength: number;
   initialDemands: number;
@@ -125,7 +139,50 @@ function getPrevFinishTime(queue: QueuedOp[], ops: Operation[]) {
   return ops[ops.length - 1]?.finishTime;
 }
 
-export function genIdleTimeArr(res: ModelResults, analysisTimeArr: number[]) {
+export function analyze(
+  demands: Demand[],
+  res: ModelResults,
+  analysisTimeArr: number[]
+) {
+  const items: AnalysisItem[] = [];
+  const idleTimeArr = genIdleTimeArr(res, analysisTimeArr);
+  for (let i = 0; i < analysisTimeArr.length; i++) {
+    const time = analysisTimeArr[i];
+    const ops = res.ops.filter((e) => e.startTime < time);
+    const demandsPushed = demands.filter((e) => e.pushTime < time).length;
+    const queue = queueStateAtTime(time, res);
+
+    const serviced = res.ops.filter((e) => e.finishTime < time).length;
+    const idleTime = idleTimeArr[i];
+    const idleProb = idleTime / time;
+
+    const isLoaded = res.ops.filter(
+      (e) => e.startTime < time && e.finishTime > time
+    ).length;
+    const inSystem = queue.length + Number(isLoaded);
+
+    const notServiced = demandsPushed - serviced - inSystem;
+    const { avgQueue, avgService, avgSystem } = calcAverages(ops);
+
+    items.push({
+      time,
+      idleTime: round(idleTime),
+      loadedTime: round(time - idleTime),
+      idleP: round(idleProb),
+      loadedP: round(1 - idleProb),
+      serviced,
+      notServiced,
+      inSystem,
+      avgSystem: round(avgSystem),
+      avgQueue: round(avgQueue),
+      avgService: round(avgService)
+    });
+  }
+  return items;
+}
+
+//TODO: Need to be remade :(
+function genIdleTimeArr(res: ModelResults, analysisTimeArr: number[]) {
   const tempArr: number[] = [];
 
   // Calc idleArr for each operation
@@ -170,7 +227,7 @@ export function genIdleTimeArr(res: ModelResults, analysisTimeArr: number[]) {
   return idleTimeArr;
 }
 
-export function calcAverages(ops: Operation[]) {
+function calcAverages(ops: Operation[]) {
   const n = ops.length;
   const avgQueue =
     ops.map((e) => e.queueAwaitTime).reduce((s, e) => s + e, 0) / n;
@@ -183,7 +240,7 @@ export function calcAverages(ops: Operation[]) {
   return { avgQueue, avgService, avgSystem };
 }
 
-export function queueStateAtTime(time: number, res: ModelResults) {
+function queueStateAtTime(time: number, res: ModelResults) {
   const len = res.queueStates.length;
   for (let j = 1; j < len; j++) {
     if (res.queueStates[j].time > time) {
