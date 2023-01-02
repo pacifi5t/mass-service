@@ -79,11 +79,10 @@ export function demandsPlot(id: string, items: AnalysisItem[]) {
   const y = d3.scaleLinear().domain([0, yMax]).range([s.height, 0]);
 
   addAxes(svg, s, x, y);
+  addLabels(svg, s, "t", "N");
   plotLine(svg, x, y, serviced, "rgb(60, 180, 75)");
   plotLine(svg, x, y, notServiced, "rgb(230, 25, 75)");
   plotLine(svg, x, y, inSystem, "rgb(145, 30, 180)");
-
-  addLabels(svg, s, "t", "N");
 }
 
 export function averageTimePlot(id: string, items: AnalysisItem[]) {
@@ -108,9 +107,8 @@ export function averageTimePlot(id: string, items: AnalysisItem[]) {
   const y = d3.scaleLinear().domain([0, yMax]).range([s.height, 0]);
 
   addAxes(svg, s, x, y);
+  addLabels(svg, s, "t", "v");
   plotLine(svg, x, y, queue, "rgb(60, 180, 75)");
   plotLine(svg, x, y, service, "rgb(230, 25, 75)");
   plotLine(svg, x, y, system, "rgb(145, 30, 180)");
-
-  addLabels(svg, s, "t", "v");
 }

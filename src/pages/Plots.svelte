@@ -26,8 +26,34 @@
 </script>
 
 <div class="grid grid-cols-2 grid-rows-2 gap-4 mt-8">
-  <div id="idle-loaded">idle-loaded</div>
-  <div id="idle-loaded-prob">idle-loaded-prob</div>
-  <div id="serviced-not-system">serviced-not-system</div>
-  <div id="avg-time">avg-time</div>
+  <div>
+    <div id="idle-loaded" />
+    <div class="ml-8">
+      <p class="text-green-600">- Load time</p>
+      <p class="text-red-500">- Idle time</p>
+    </div>
+  </div>
+  <div>
+    <div id="idle-loaded-prob" />
+    <div class="ml-8">
+      <p class="text-green-600">- Load probability</p>
+      <p class="text-red-500">- Idle probability</p>
+    </div>
+  </div>
+  <div>
+    <div id="serviced-not-system" />
+    <div class="ml-8">
+      <p class="text-green-600">- Serviced</p>
+      <p class="text-red-500">- Not serviced</p>
+      <p class="text-indigo-800">- In system</p>
+    </div>
+  </div>
+  <div>
+    <div id="avg-time" />
+    <div class="ml-8">
+      <p class="text-green-600">- Avg time in queue</p>
+      <p class="text-red-500">- Avg service time</p>
+      <p class="text-indigo-800">- Avg time in system</p>
+    </div>
+  </div>
 </div>
