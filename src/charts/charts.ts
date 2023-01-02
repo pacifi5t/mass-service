@@ -1,5 +1,5 @@
 import * as d3 from "d3";
-import * as math from "../math";
+import { max } from "d3";
 import {
   clearChildOf,
   PlotSettings,
@@ -7,198 +7,26 @@ import {
   addLabels,
   addAxes
 } from ".";
-import type { ClassifiedTau, SignificantIntensities } from "../math";
+import type { AnalysisItem } from "../service-system";
 
-export function createDataChart(id: string, inputData: number[]) {
+export function idleLoadedTimeChart(id: string, items: AnalysisItem[]) {
   clearChildOf(id);
 
-  const dataMin = d3.min<number>(inputData);
-  const dataMax = d3.max<number>(inputData);
-  const padding = (dataMax - dataMin) / 40;
+  const idleData: [number, number][] = items.map((e) => [e.time, e.idleTime]);
+  const loadData: [number, number][] = items.map((e) => [e.time, e.loadedTime]);
+  const idleSorted = idleData.sort((a, b) => a[0] - b[0]);
+  const loadSorted = loadData.sort((a, b) => a[0] - b[0]);
 
-  const data = inputData.map((e, i) => Object({ x: i, y: e }));
-
-  const s = new PlotSettings(640, 480, { x: 40, y: 40 });
+  const s = new PlotSettings(600, 450, { x: 40, y: 40 });
   const svg = createCanvas(id, s);
 
-  const x = d3
-    .scaleLinear()
-    .domain([0, data.length - 1])
-    .range([0, s.width]);
+  const xArr = [idleSorted.map((e) => e[0]), loadSorted.map((e) => e[0])];
+  const yArr = [idleSorted.map((e) => e[1]), loadSorted.map((e) => e[1])];
+  const xMax = d3.max(xArr.flat());
+  const yMax = d3.max(yArr.flat());
 
-  const y = d3
-    .scaleLinear()
-    .domain([dataMin - padding, dataMax + padding])
-    .range([s.height, 0]);
-
-  addAxes(svg, s, x, y);
-
-  svg
-    .selectAll("whatever")
-    .data(data)
-    .enter()
-    .append("circle")
-    .attr("cx", (d) => x(d.x))
-    .attr("cy", (d) => y(d.y))
-    .attr("fill", () => "#4300b0")
-    .attr("r", 4);
-
-  addLabels(svg, s, "№", "e");
-}
-
-export function piecewiseIntensityChart(
-  id: string,
-  tauArr: number[],
-  classified: math.ClassifiedTau,
-  sigInt: SignificantIntensities,
-  params: { a: number; b: number }
-) {
-  clearChildOf(id);
-  const s = new PlotSettings(640, 480, { x: 40, y: 40 });
-
-  const tMin = d3.min<number>(tauArr);
-  const tMax = d3.max<number>(tauArr);
-
-  const length = s.width / (classified.classCount() - 1);
-  const indensityD = classified.intensities.map((e, i) => {
-    const x1 = i * length;
-    return { x1, x2: x1 + length, y: e.value };
-  });
-
-  const confIntervalD = classified.intenConfIntervals.map((e, i) =>
-    Object({ high: e[1], low: e[0], x: i * length, width: (i + 1) * length })
-  );
-
-  const sortedTau = [...tauArr].sort((a, b) => a - b);
-  const intenApproxD: [number, number][] = sortedTau.map((e) => [
-    e,
-    math.intensityFn(e, params.a, params.b)
-  ]);
-
-  let offset = 0;
-  const sigIntD = sigInt.intensities.map((e, i) => {
-    const mergedCount = sigInt.mergedClasses[i].length;
-    const o = {
-      x1: offset,
-      x2: offset + mergedCount * length,
-      y: e.value
-    };
-    offset += mergedCount * length;
-    return o;
-  });
-
-  const laMax = d3.max([
-    ...classified.intensities.map((e) => e.value),
-    ...confIntervalD.flatMap((e) => [e.high, e.low]).flat()
-  ]);
-
-  const svg = createCanvas(id, s);
-
-  const x = d3
-    .scaleLinear()
-    .domain([
-      tMin,
-      d3.max(tauArr.filter((e) => e <= tMax - classified.classWidth))
-    ])
-    .range([0, s.width]);
-
-  const y = d3.scaleLinear().domain([0, laMax]).range([s.height, 0]);
-
-  addAxes(svg, s, x, y);
-
-  // Ticks
-  svg
-    .selectAll()
-    .data(indensityD)
-    .join("line")
-    .attr("x1", (d) => d.x2)
-    .attr("x2", (d) => d.x2)
-    .attr("y1", (_) => 0)
-    .attr("y2", (_) => s.height)
-    .attr("stroke", "lightgrey")
-    .attr("stroke-width", 1);
-
-  // Conf intervals
-  svg
-    .selectAll("rect")
-    .data(confIntervalD)
-    .join("rect")
-    .attr("x", (d) => d.x)
-    .attr("y", (d) => y(d.high))
-    .attr("height", (d) => y(d.low) - y(d.high))
-    .attr("width", (d) => length)
-    .attr("fill", "#ccbce5");
-
-  // Intensities
-  svg
-    .selectAll("whatever")
-    .data(indensityD)
-    .join("line")
-    .attr("x1", (d) => d.x1)
-    .attr("x2", (d) => d.x2)
-    .attr("y1", (d) => y(d.y))
-    .attr("y2", (d) => y(d.y))
-    .attr("stroke", "#4300b0")
-    .attr("stroke-width", 5);
-  svg
-    .selectAll("whatever")
-    .data(sigIntD)
-    .join("line")
-    .attr("x1", (d) => d.x1)
-    .attr("x2", (d) => d.x2)
-    .attr("y1", (d) => y(d.y))
-    .attr("y2", (d) => y(d.y))
-    .attr("stroke", "red")
-    .attr("stroke-width", 5);
-
-  // Intensity approximation
-  const line = d3
-    .line()
-    .curve(d3.curveBasis)
-    .x((d) => x(d[0]))
-    .y((d) => y(d[1]));
-
-  svg
-    .append("path")
-    .datum(intenApproxD.filter((e) => e[0] <= tMax - classified.classWidth))
-    .attr("fill", "none")
-    .attr("stroke", "rgba(31, 41, 55, 100)")
-    .attr("stroke-width", 5)
-    .attr("stroke-linejoin", "round")
-    .attr("d", line);
-
-  addLabels(svg, s, "τ", "λ");
-}
-
-export function approxFuncChart(
-  id: string,
-  classified: ClassifiedTau,
-  sigInt: SignificantIntensities,
-  params: { a: number; b: number }
-) {
-  clearChildOf(id);
-
-  const sorted = classified.taus.flat().sort((a, b) => a - b);
-  const tMax = sorted[sorted.length - 1];
-  const clamped = sorted.filter((e) => e <= tMax - classified.classWidth);
-
-  const dataF: [number, number][] = clamped.map((e) => [
-    e,
-    math.approxIntensity(e, params.a, params.b)
-  ]);
-
-  const s = new PlotSettings(640, 480, { x: 40, y: 40 });
-  const svg = createCanvas(id, s);
-
-  const x = d3
-    .scaleLinear()
-    .domain([clamped[0], d3.max(clamped)])
-    .range([0, s.width]);
-
-  const y = d3
-    .scaleLinear()
-    .domain([0, d3.max<number>([...dataF.map((e) => e[1]), 1])])
-    .range([s.height, 0]);
+  const x = d3.scaleLinear().domain([0, xMax]).range([0, s.width]);
+  const y = d3.scaleLinear().domain([0, yMax]).range([s.height, 0]);
 
   addAxes(svg, s, x, y);
 
@@ -210,41 +38,67 @@ export function approxFuncChart(
 
   svg
     .append("path")
-    .datum(dataF)
+    .datum(idleSorted)
     .attr("fill", "none")
-    .attr("stroke", "rgba(31, 41, 55, 100)")
-    .attr("stroke-width", 5)
+    .attr("stroke", "rgb(230, 25, 75)")
+    .attr("stroke-width", 3)
     .attr("stroke-linejoin", "round")
     .attr("d", line);
 
-  const dataSF: [number, number][] = [];
-  const tauArr = classified.taus.flat().sort((a, b) => a - b);
-  for (let i = 0; i < tauArr.length; i++) {
-    const tau = tauArr[i];
-    for (let j = 0; j < sigInt.limits.length; j++) {
-      const limit = sigInt.limits[j];
-      if (tau <= limit) {
-        dataSF.push([tau, math.splineExp(tau, sigInt)]);
-        break;
-      }
-    }
-  }
+  svg
+    .append("path")
+    .datum(loadSorted)
+    .attr("fill", "none")
+    .attr("stroke", "rgb(60, 180, 75)")
+    .attr("stroke-width", 3)
+    .attr("stroke-linejoin", "round")
+    .attr("d", line);
+
+  addLabels(svg, s, "t", "v");
+}
+
+export function idleLoadedProbChart(id: string, items: AnalysisItem[]) {
+  clearChildOf(id);
+
+  const idleData: [number, number][] = items.map((e) => [e.time, e.idleP]);
+  const loadData: [number, number][] = items.map((e) => [e.time, e.loadedP]);
+  const idleSorted = idleData.sort((a, b) => a[0] - b[0]);
+  const loadSorted = loadData.sort((a, b) => a[0] - b[0]);
+
+  const s = new PlotSettings(600, 450, { x: 40, y: 40 });
+  const svg = createCanvas(id, s);
+
+  const xArr = [idleSorted.map((e) => e[0]), loadSorted.map((e) => e[0])];
+  const xMax = d3.max(xArr.flat());
+
+  const x = d3.scaleLinear().domain([0, xMax]).range([0, s.width]);
+  const y = d3.scaleLinear().domain([0, 1]).range([s.height, 0]);
+
+  addAxes(svg, s, x, y);
+
+  const line = d3
+    .line()
+    .curve(d3.curveBasis)
+    .x((d) => x(d[0]))
+    .y((d) => y(d[1]));
 
   svg
     .append("path")
-    .datum(dataSF)
+    .datum(idleSorted)
     .attr("fill", "none")
-    .attr("stroke", "red")
-    .attr("stroke-width", 5)
+    .attr("stroke", "rgb(230, 25, 75)")
+    .attr("stroke-width", 3)
     .attr("stroke-linejoin", "round")
-    .attr(
-      "d",
-      d3
-        .line()
-        .curve(d3.curveBasis)
-        .x((d) => x(d[0]))
-        .y((d) => y(d[1]))
-    );
+    .attr("d", line);
 
-  addLabels(svg, s, "τ", "F");
+  svg
+    .append("path")
+    .datum(loadSorted)
+    .attr("fill", "none")
+    .attr("stroke", "rgb(60, 180, 75)")
+    .attr("stroke-width", 3)
+    .attr("stroke-linejoin", "round")
+    .attr("d", line);
+
+  addLabels(svg, s, "t", "v");
 }

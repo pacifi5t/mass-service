@@ -1,10 +1,31 @@
 <script lang="ts">
+  import { onMount } from "svelte";
+  import * as charts from "../charts";
+  import * as sys from "../service-system";
+  import { demandsStore, demandsCountStore, configStore } from "../stores";
 
+  const config = $configStore;
+  config.analysisPeriod = 1;
+
+  const demands = $demandsStore
+    .slice(0, $demandsCountStore)
+    .filter((e) => e.pushTime < config.uptime);
+
+  onMount(() => {
+    const res = sys.modelOneChannel(config, demands);
+    const items = sys.analyze(demands, res, sys.genAnalysisTimeArr(config));
+    createPlots(items);
+  });
+
+  function createPlots(items: sys.AnalysisItem[]) {
+    charts.idleLoadedTimeChart("idle-loaded", items);
+    charts.idleLoadedProbChart("idle-loaded-prob", items);
+  }
 </script>
 
 <div class="grid grid-cols-2 grid-rows-2 gap-4 mt-8">
-  <div>01</div>
-  <div>01</div>
-  <div>01</div>
-  <div>01</div>
+  <div id="idle-loaded">idle-loaded</div>
+  <div id="idle-loaded-prob">idle-loaded-prob</div>
+  <div id="serviced-not-system">serviced-not-system</div>
+  <div id="avg-time">avg-time</div>
 </div>

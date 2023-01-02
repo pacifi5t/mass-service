@@ -43,8 +43,8 @@ export function addLabels(
   svg
     .append("text")
     .attr("text-anchor", "end")
-    .attr("y", -20)
-    .attr("x", -s.margin.x / 2)
+    .attr("y", -10)
+    .attr("x", -10)
     .text(yLabel);
 }
 
@@ -73,8 +73,8 @@ export function addAxes(
 
   svg
     .append("line")
-    .attr("x1", () => s.width)
-    .attr("x2", () => s.width)
+    .attr("x1", () => s.width + 0.5)
+    .attr("x2", () => s.width + 0.5)
     .attr("y1", (_) => 0)
     .attr("y2", (_) => s.height)
     .attr("stroke", "black")
@@ -84,8 +84,8 @@ export function addAxes(
     .append("line")
     .attr("x1", () => 0)
     .attr("x2", () => s.width)
-    .attr("y1", (_) => 0)
-    .attr("y2", (_) => 0)
+    .attr("y1", (_) => 0.5)
+    .attr("y2", (_) => 0.5)
     .attr("stroke", "black")
     .attr("stroke-width", 1);
 }
