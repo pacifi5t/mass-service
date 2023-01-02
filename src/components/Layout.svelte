@@ -15,6 +15,7 @@
         <div class="ml-10 flex items-baseline space-x-4">
           <NavItem label="Configuration" href="/" {currentRoute} />
           <NavItem label="Stats" href="/stats" {currentRoute} />
+          <NavItem label="Plots" href="/plots" {currentRoute} />
         </div>
       </div>
     </div>
