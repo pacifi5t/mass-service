@@ -1,4 +1,4 @@
-import { range } from "d3";
+import { round } from "./math";
 
 export class Config {
   maxQueueLength: number;
@@ -28,20 +28,22 @@ export class Demand {
   serviceTime: number;
 
   constructor(pushTime: number, serviceTime: number) {
-    this.pushTime = pushTime;
-    this.serviceTime = serviceTime;
+    this.pushTime = round(pushTime);
+    this.serviceTime = round(serviceTime);
   }
 }
 
 export class Operation {
+  id: number;
   startTime: number;
   finishTime: number;
   queueAwaitTime: number;
 
-  constructor(start: number, finish: number, queueAwait: number) {
-    this.startTime = start;
-    this.finishTime = finish;
-    this.queueAwaitTime = queueAwait;
+  constructor(id: number, start: number, finish: number, queueAwait: number) {
+    this.id = id;
+    this.startTime = round(start);
+    this.finishTime = round(finish);
+    this.queueAwaitTime = round(queueAwait);
   }
 }
 
@@ -51,9 +53,9 @@ export class QueuedOp {
   finishTime: number;
 
   constructor(push: number, start: number, finish: number) {
-    this.pushTime = push;
-    this.startTime = start;
-    this.finishTime = finish;
+    this.pushTime = round(push);
+    this.startTime = round(start);
+    this.finishTime = round(finish);
   }
 }
 
@@ -88,17 +90,26 @@ export function modelOneChannel(config: Config, demands: Demand[]) {
 
     queue = queue.filter((e) => e.startTime >= time);
     const prevFinishTime = i == 0 ? 0 : getPrevFinishTime(queue, ops);
+    const finishTime = prevFinishTime + serviceTime;
 
-    // Add demand to queue or service it
-    if (prevFinishTime > time) {
-      if (queue.length < config.maxQueueLength) {
-        const finishTime = prevFinishTime + serviceTime;
-        const queueAwaitTime = prevFinishTime - time;
-        queue.push(new QueuedOp(time, prevFinishTime, finishTime));
-        ops.push(new Operation(prevFinishTime, finishTime, queueAwaitTime));
-      }
-    } else {
-      ops.push(new Operation(time, time + serviceTime, 0));
+    // Refuse to service because can't complete in time
+    if (finishTime > config.uptime) {
+      queueStates.push(new QueueState(time, queue));
+      continue;
+    }
+
+    // Service immediately, worker is idle
+    if (prevFinishTime <= time) {
+      ops.push(new Operation(i, time, time + serviceTime, 0));
+      queueStates.push(new QueueState(time, queue));
+      continue;
+    }
+
+    // Add demand to queue
+    if (queue.length < config.maxQueueLength) {
+      const queueAwaitTime = prevFinishTime - time;
+      queue.push(new QueuedOp(time, prevFinishTime, finishTime));
+      ops.push(new Operation(i, prevFinishTime, finishTime, queueAwaitTime));
     }
 
     queueStates.push(new QueueState(time, queue));

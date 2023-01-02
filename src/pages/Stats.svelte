@@ -60,7 +60,6 @@
 
       const notServiced = demandsPushed - serviced - inSystem;
       const { avgQueue, avgService, avgSystem } = calcAverages(ops);
-      const isLast = i == analysisTimeArr.length - 1;
 
       items.push({
         time: time,
@@ -69,8 +68,8 @@
         idleP: round(idleProb),
         loadedP: round(1 - idleProb),
         serviced,
-        notServiced: isLast ? notServiced + inSystem : notServiced,
-        inSystem: isLast ? 0 : inSystem,
+        notServiced,
+        inSystem,
         avgSystem: round(avgSystem),
         avgQueue: round(avgQueue),
         avgService: round(avgService)
@@ -126,16 +125,14 @@
   }
 
   function queueStateAtTime(time: number, res: ModelResults) {
-    let queue = res.queueStates[0].queue;
-    for (let j = 1; j < res.queueStates.length; j++) {
-      const temp = res.queueStates[j];
-      if (temp.time > time) {
+    const len = res.queueStates.length;
+    for (let j = 1; j < len; j++) {
+      if (res.queueStates[j].time > time) {
         const q = res.queueStates[j - 1];
-        queue = q.queue.filter((e) => e.startTime >= time);
-        break;
+        return q.queue.filter((e) => e.startTime >= time);
       }
     }
-    return queue;
+    return res.queueStates[len - 1].queue.filter((e) => e.startTime >= time);
   }
 </script>
 
