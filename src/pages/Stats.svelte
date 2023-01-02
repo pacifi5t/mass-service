@@ -1,12 +1,6 @@
 <script lang="ts">
   import { Table } from "attractions";
-  import { range } from "d3";
-  import {
-    modelOneChannel,
-    ModelResults,
-    Demand,
-    Operation
-  } from "../service-system";
+  import * as sys from "../service-system";
   import { demandsStore, demandsCountStore, configStore } from "../stores";
   import { round } from "../math";
 
@@ -30,24 +24,26 @@
     .slice(0, $demandsCountStore)
     .filter((e) => e.pushTime < config.uptime);
 
-  const res = modelOneChannel(config, demands);
+  const res = sys.modelOneChannel(config, demands);
+
+  console.clear();
   console.table(demands);
   console.table(res.ops);
   console.log(res);
 
-  analyze(demands, res, genAnalysisTimeArr());
+  analyze(demands, res, sys.genAnalysisTimeArr(config));
 
   function analyze(
-    demands: Demand[],
-    res: ModelResults,
+    demands: sys.Demand[],
+    res: sys.ModelResults,
     analysisTimeArr: number[]
   ) {
-    const idleTimeArr = genIdleTimeArr(res, analysisTimeArr);
+    const idleTimeArr = sys.genIdleTimeArr(res, analysisTimeArr);
     for (let i = 0; i < analysisTimeArr.length; i++) {
       const time = analysisTimeArr[i];
       const ops = res.ops.filter((e) => e.startTime < time);
       const demandsPushed = demands.filter((e) => e.pushTime < time).length;
-      const queue = queueStateAtTime(time, res);
+      const queue = sys.queueStateAtTime(time, res);
 
       const serviced = res.ops.filter((e) => e.finishTime < time).length;
       const idleTime = idleTimeArr[i];
@@ -59,7 +55,7 @@
       const inSystem = queue.length + Number(isLoaded);
 
       const notServiced = demandsPushed - serviced - inSystem;
-      const { avgQueue, avgService, avgSystem } = calcAverages(ops);
+      const { avgQueue, avgService, avgSystem } = sys.calcAverages(ops);
 
       items.push({
         time,
@@ -75,85 +71,6 @@
         avgService: round(avgService)
       });
     }
-  }
-
-  function genIdleTimeArr(res: ModelResults, analysisTimeArr: number[]) {
-    const tempArr: number[] = [];
-
-    // Calc idleArr for each operation
-    for (let i = 0; i < res.ops.length; i++) {
-      const prev = res.ops[i - 1];
-      const prevFinish = prev === undefined ? 0 : prev.finishTime;
-      tempArr.push(res.ops[i].startTime - prevFinish);
-    }
-
-    // Calc idleArr for each analysis time
-    const idleTimeArr: number[] = [];
-    for (let i = 0; i < analysisTimeArr.length; i++) {
-      const time = analysisTimeArr[i];
-      const ops = res.ops.filter((e) => e.startTime < time);
-
-      const idleTime = tempArr
-        .slice(0, ops.length)
-        .reduce((total, e) => total + e, 0);
-      idleTimeArr.push(ops.length == 0 ? time : idleTime);
-    }
-
-    // Add idle time after last operation
-    let indexNoOps: number;
-    const lastOpFinishTime = res.ops[res.ops.length - 1].finishTime;
-    for (let i = 0; i < analysisTimeArr.length; i++) {
-      const time = analysisTimeArr[i];
-      if (time < lastOpFinishTime) {
-        continue;
-      }
-
-      idleTimeArr[i] += time - lastOpFinishTime;
-      indexNoOps = i + 1;
-      break;
-    }
-
-    for (let i = indexNoOps; i < analysisTimeArr.length; i++) {
-      const time = analysisTimeArr[i];
-      const prevTime = analysisTimeArr[i - 1];
-      idleTimeArr[i] = idleTimeArr[i - 1] + (time - prevTime);
-    }
-
-    return idleTimeArr;
-  }
-
-  function genAnalysisTimeArr() {
-    const count = Math.ceil(config.uptime / config.analysisPeriod);
-    const analysisTimes = range(count).map(
-      (e) => (e + 1) * config.analysisPeriod
-    );
-    analysisTimes.splice(count - 1, 1);
-    analysisTimes.push(config.uptime);
-    return analysisTimes;
-  }
-
-  function calcAverages(ops: Operation[]) {
-    const n = ops.length;
-    const avgQueue =
-      ops.map((e) => e.queueAwaitTime).reduce((s, e) => s + e, 0) / n;
-    const avgService =
-      ops.map((e) => e.finishTime - e.startTime).reduce((s, e) => s + e, 0) / n;
-    const avgSystem =
-      ops
-        .map((e) => e.queueAwaitTime + (e.finishTime - e.startTime))
-        .reduce((s, e) => s + e, 0) / n;
-    return { avgQueue, avgService, avgSystem };
-  }
-
-  function queueStateAtTime(time: number, res: ModelResults) {
-    const len = res.queueStates.length;
-    for (let j = 1; j < len; j++) {
-      if (res.queueStates[j].time > time) {
-        const q = res.queueStates[j - 1];
-        return q.queue.filter((e) => e.startTime >= time);
-      }
-    }
-    return res.queueStates[len - 1].queue.filter((e) => e.startTime >= time);
   }
 </script>
 
