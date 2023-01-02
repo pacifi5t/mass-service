@@ -21,3 +21,7 @@ export function roundTo(num: number, digits: number) {
   num = parseFloat((num * multiplicator).toFixed(11));
   return Math.round(num) / multiplicator;
 }
+
+export function clamp(num: number, min: number, max: number) {
+  return Math.min(Math.max(num, min), max);
+}

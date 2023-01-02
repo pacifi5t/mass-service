@@ -1,5 +1,5 @@
 import { range } from "d3";
-import { round } from "./math";
+import { round, clamp } from "./math";
 
 export type AnalysisItem = {
   time: number;
@@ -145,16 +145,20 @@ export function analyze(
   analysisTimeArr: number[]
 ) {
   const items: AnalysisItem[] = [];
-  const idleTimeArr = genIdleTimeArr(res, analysisTimeArr);
+  const loadTimeArr = calcLoadTimeArr(res, analysisTimeArr);
+
   for (let i = 0; i < analysisTimeArr.length; i++) {
     const time = analysisTimeArr[i];
+    const timePrev =
+      analysisTimeArr[i - 1] === undefined ? 0 : analysisTimeArr[i - 1];
+
     const ops = res.ops.filter((e) => e.startTime < time);
     const demandsPushed = demands.filter((e) => e.pushTime < time).length;
     const queue = queueStateAtTime(time, res);
 
     const serviced = res.ops.filter((e) => e.finishTime < time).length;
-    const idleTime = idleTimeArr[i];
-    const idleProb = idleTime / time;
+    const loadedTime = round(loadTimeArr[i]);
+    const loadedP = round(loadedTime / (time - timePrev));
 
     const isLoaded = res.ops.filter(
       (e) => e.startTime < time && e.finishTime > time
@@ -166,10 +170,10 @@ export function analyze(
 
     items.push({
       time,
-      idleTime: round(idleTime),
-      loadedTime: round(time - idleTime),
-      idleP: round(idleProb),
-      loadedP: round(1 - idleProb),
+      idleTime: round(time - timePrev - loadedTime),
+      loadedTime,
+      idleP: round(1 - loadedP),
+      loadedP,
       serviced,
       notServiced,
       inSystem,
@@ -179,52 +183,6 @@ export function analyze(
     });
   }
   return items;
-}
-
-//TODO: Need to be remade :(
-function genIdleTimeArr(res: ModelResults, analysisTimeArr: number[]) {
-  const tempArr: number[] = [];
-
-  // Calc idleArr for each operation
-  for (let i = 0; i < res.ops.length; i++) {
-    const prev = res.ops[i - 1];
-    const prevFinish = prev === undefined ? 0 : prev.finishTime;
-    tempArr.push(res.ops[i].startTime - prevFinish);
-  }
-
-  // Calc idleArr for each analysis time
-  const idleTimeArr: number[] = [];
-  for (let i = 0; i < analysisTimeArr.length; i++) {
-    const time = analysisTimeArr[i];
-    const ops = res.ops.filter((e) => e.startTime < time);
-
-    const idleTime = tempArr
-      .slice(0, ops.length)
-      .reduce((total, e) => total + e, 0);
-    idleTimeArr.push(ops.length == 0 ? time : idleTime);
-  }
-
-  // Add idle time after last operation
-  let indexNoOps: number;
-  const lastOpFinishTime = res.ops[res.ops.length - 1].finishTime;
-  for (let i = 0; i < analysisTimeArr.length; i++) {
-    const time = analysisTimeArr[i];
-    if (time < lastOpFinishTime) {
-      continue;
-    }
-
-    idleTimeArr[i] += time - lastOpFinishTime;
-    indexNoOps = i + 1;
-    break;
-  }
-
-  for (let i = indexNoOps; i < analysisTimeArr.length; i++) {
-    const time = analysisTimeArr[i];
-    const prevTime = analysisTimeArr[i - 1];
-    idleTimeArr[i] = idleTimeArr[i - 1] + (time - prevTime);
-  }
-
-  return idleTimeArr;
 }
 
 function calcAverages(ops: Operation[]) {
@@ -259,4 +217,37 @@ export function genAnalysisTimeArr(config: Config) {
   analysisTimes.splice(count - 1, 1);
   analysisTimes.push(config.uptime);
   return analysisTimes;
+}
+
+function calcLoadTimeArr(res: ModelResults, analysisTimeArr: number[]) {
+  const loadTimeArr: number[] = [];
+  for (let i = 0; i < analysisTimeArr.length; i++) {
+    let loadTime = 0;
+    const tCurrent = analysisTimeArr[i];
+    const tPrev =
+      analysisTimeArr[i - 1] === undefined ? 0 : analysisTimeArr[i - 1];
+
+    for (let j = 0; j < res.ops.length; j++) {
+      const op = res.ops[j];
+      if (!operationOverlapsTimeRange(op, tPrev, tCurrent)) {
+        continue;
+      }
+      loadTime +=
+        clamp(op.finishTime, tPrev, tCurrent) -
+        clamp(op.startTime, tPrev, tCurrent);
+    }
+    loadTimeArr.push(loadTime);
+  }
+  return loadTimeArr;
+}
+function operationOverlapsTimeRange(
+  op: Operation,
+  tPrev: number,
+  tCurrent: number
+) {
+  return (
+    (op.startTime > tPrev && op.finishTime < tCurrent) ||
+    (op.startTime < tPrev && op.finishTime > tPrev) ||
+    (op.startTime < tCurrent && op.finishTime > tCurrent)
+  );
 }
