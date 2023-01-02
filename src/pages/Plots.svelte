@@ -20,6 +20,8 @@
   function createPlots(items: sys.AnalysisItem[]) {
     charts.idleLoadedTimeChart("idle-loaded", items);
     charts.idleLoadedProbChart("idle-loaded-prob", items);
+    charts.demandsChart("serviced-not-system", items);
+    charts.averageTimeChart("avg-time", items);
   }
 </script>
 

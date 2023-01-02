@@ -5,100 +5,112 @@ import {
   PlotSettings,
   createCanvas,
   addLabels,
-  addAxes
+  addAxes,
+  plotLine
 } from ".";
 import type { AnalysisItem } from "../service-system";
 
 export function idleLoadedTimeChart(id: string, items: AnalysisItem[]) {
   clearChildOf(id);
-
-  const idleData: [number, number][] = items.map((e) => [e.time, e.idleTime]);
-  const loadData: [number, number][] = items.map((e) => [e.time, e.loadedTime]);
-  const idleSorted = idleData.sort((a, b) => a[0] - b[0]);
-  const loadSorted = loadData.sort((a, b) => a[0] - b[0]);
-
   const s = new PlotSettings(600, 450, { x: 40, y: 40 });
   const svg = createCanvas(id, s);
 
-  const xArr = [idleSorted.map((e) => e[0]), loadSorted.map((e) => e[0])];
-  const yArr = [idleSorted.map((e) => e[1]), loadSorted.map((e) => e[1])];
-  const xMax = d3.max(xArr.flat());
-  const yMax = d3.max(yArr.flat());
+  const sorted = items.sort((a, b) => a.time - b.time);
+  const idleData: [number, number][] = sorted.map((e) => [e.time, e.idleTime]);
+  const loadData: [number, number][] = sorted.map((e) => [
+    e.time,
+    e.loadedTime
+  ]);
+
+  const xMax = max(idleData.map((e) => e[0]));
+  const yArr = [idleData.map((e) => e[1]), loadData.map((e) => e[1])];
+  const yMax = max(yArr.flat());
 
   const x = d3.scaleLinear().domain([0, xMax]).range([0, s.width]);
   const y = d3.scaleLinear().domain([0, yMax]).range([s.height, 0]);
 
   addAxes(svg, s, x, y);
-
-  const line = d3
-    .line()
-    .curve(d3.curveBasis)
-    .x((d) => x(d[0]))
-    .y((d) => y(d[1]));
-
-  svg
-    .append("path")
-    .datum(idleSorted)
-    .attr("fill", "none")
-    .attr("stroke", "rgb(230, 25, 75)")
-    .attr("stroke-width", 3)
-    .attr("stroke-linejoin", "round")
-    .attr("d", line);
-
-  svg
-    .append("path")
-    .datum(loadSorted)
-    .attr("fill", "none")
-    .attr("stroke", "rgb(60, 180, 75)")
-    .attr("stroke-width", 3)
-    .attr("stroke-linejoin", "round")
-    .attr("d", line);
-
   addLabels(svg, s, "t", "v");
+  plotLine(svg, x, y, idleData, "rgb(230, 25, 75)");
+  plotLine(svg, x, y, loadData, "rgb(60, 180, 75)");
 }
 
 export function idleLoadedProbChart(id: string, items: AnalysisItem[]) {
   clearChildOf(id);
-
-  const idleData: [number, number][] = items.map((e) => [e.time, e.idleP]);
-  const loadData: [number, number][] = items.map((e) => [e.time, e.loadedP]);
-  const idleSorted = idleData.sort((a, b) => a[0] - b[0]);
-  const loadSorted = loadData.sort((a, b) => a[0] - b[0]);
-
   const s = new PlotSettings(600, 450, { x: 40, y: 40 });
   const svg = createCanvas(id, s);
 
-  const xArr = [idleSorted.map((e) => e[0]), loadSorted.map((e) => e[0])];
-  const xMax = d3.max(xArr.flat());
+  const sorted = items.sort((a, b) => a.time - b.time);
+  const idleData: [number, number][] = sorted.map((e) => [e.time, e.idleP]);
+  const loadData: [number, number][] = sorted.map((e) => [e.time, e.loadedP]);
 
+  const xMax = max(idleData.map((e) => e[0]));
   const x = d3.scaleLinear().domain([0, xMax]).range([0, s.width]);
   const y = d3.scaleLinear().domain([0, 1]).range([s.height, 0]);
 
   addAxes(svg, s, x, y);
+  addLabels(svg, s, "t", "p");
+  plotLine(svg, x, y, idleData, "rgb(230, 25, 75)");
+  plotLine(svg, x, y, loadData, "rgb(60, 180, 75)");
+}
 
-  const line = d3
-    .line()
-    .curve(d3.curveBasis)
-    .x((d) => x(d[0]))
-    .y((d) => y(d[1]));
+export function demandsChart(id: string, items: AnalysisItem[]) {
+  clearChildOf(id);
+  const s = new PlotSettings(600, 450, { x: 40, y: 40 });
+  const svg = createCanvas(id, s);
 
-  svg
-    .append("path")
-    .datum(idleSorted)
-    .attr("fill", "none")
-    .attr("stroke", "rgb(230, 25, 75)")
-    .attr("stroke-width", 3)
-    .attr("stroke-linejoin", "round")
-    .attr("d", line);
+  const sorted = items.sort((a, b) => a.time - b.time);
+  const inSystem: [number, number][] = sorted.map((e) => [e.time, e.inSystem]);
+  const serviced: [number, number][] = sorted.map((e) => [e.time, e.serviced]);
+  const notServiced: [number, number][] = sorted.map((e) => [
+    e.time,
+    e.notServiced
+  ]);
 
-  svg
-    .append("path")
-    .datum(loadSorted)
-    .attr("fill", "none")
-    .attr("stroke", "rgb(60, 180, 75)")
-    .attr("stroke-width", 3)
-    .attr("stroke-linejoin", "round")
-    .attr("d", line);
+  const yArr = [
+    serviced.map((e) => e[1]),
+    notServiced.map((e) => e[1]),
+    inSystem.map((e) => e[1])
+  ];
+  const xMax = max(serviced.map((e) => e[0]));
+  const yMax = max(yArr.flat());
+
+  const x = d3.scaleLinear().domain([0, xMax]).range([0, s.width]);
+  const y = d3.scaleLinear().domain([0, yMax]).range([s.height, 0]);
+
+  addAxes(svg, s, x, y);
+  plotLine(svg, x, y, serviced, "rgb(60, 180, 75)");
+  plotLine(svg, x, y, notServiced, "rgb(230, 25, 75)");
+  plotLine(svg, x, y, inSystem, "rgb(145, 30, 180)");
+
+  addLabels(svg, s, "t", "N");
+}
+
+export function averageTimeChart(id: string, items: AnalysisItem[]) {
+  clearChildOf(id);
+  const s = new PlotSettings(600, 450, { x: 40, y: 40 });
+  const svg = createCanvas(id, s);
+
+  const sorted = items.sort((a, b) => a.time - b.time);
+  const queue: [number, number][] = sorted.map((e) => [e.time, e.avgQueue]);
+  const service: [number, number][] = sorted.map((e) => [e.time, e.avgService]);
+  const system: [number, number][] = sorted.map((e) => [e.time, e.avgSystem]);
+
+  const yArr = [
+    queue.map((e) => e[1]),
+    service.map((e) => e[1]),
+    system.map((e) => e[1])
+  ];
+  const xMax = max(queue.map((e) => e[0]));
+  const yMax = max(yArr.flat());
+
+  const x = d3.scaleLinear().domain([0, xMax]).range([0, s.width]);
+  const y = d3.scaleLinear().domain([0, yMax]).range([s.height, 0]);
+
+  addAxes(svg, s, x, y);
+  plotLine(svg, x, y, queue, "rgb(60, 180, 75)");
+  plotLine(svg, x, y, service, "rgb(230, 25, 75)");
+  plotLine(svg, x, y, system, "rgb(145, 30, 180)");
 
   addLabels(svg, s, "t", "v");
 }

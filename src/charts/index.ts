@@ -89,3 +89,26 @@ export function addAxes(
     .attr("stroke", "black")
     .attr("stroke-width", 1);
 }
+
+export function plotLine(
+  svg: SVG,
+  x: d3.ScaleLinear<number, number, never>,
+  y: d3.ScaleLinear<number, number, never>,
+  data: [number, number][],
+  color: string
+) {
+  const line = d3
+    .line()
+    .curve(d3.curveBasis)
+    .x((d) => x(d[0]))
+    .y((d) => y(d[1]));
+
+  svg
+    .append("path")
+    .datum(data)
+    .attr("fill", "none")
+    .attr("stroke", color)
+    .attr("stroke-width", 3)
+    .attr("stroke-linejoin", "round")
+    .attr("d", line);
+}
