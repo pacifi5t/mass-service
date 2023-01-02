@@ -3,22 +3,6 @@ import { writable } from "svelte/store";
 import { Config, Demand } from "./service-system";
 import { modelExpRandomValue, modelWeibullRandomValue, round } from "./math";
 
-export const fileStore = writable([]);
-
-export const immutableDataStore = writable([]);
-
-export const classCountStore = writable(0);
-
-immutableDataStore.subscribe((value) => {
-  if (value.length == 0) {
-    classCountStore.set(0);
-    return;
-  }
-
-  const classCount = Math.floor(1 + 3.32 * Math.log10(value.length));
-  classCountStore.set(classCount);
-});
-
 const delays = range(200).map(() => round(modelExpRandomValue(0.5)));
 const pushTimeArr = delays.map((_, i, arr) =>
   arr.slice(0, i + 1).reduce((total, e) => total + e)
