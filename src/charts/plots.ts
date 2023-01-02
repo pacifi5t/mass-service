@@ -10,7 +10,7 @@ import {
 } from ".";
 import type { AnalysisItem } from "../service-system";
 
-export function idleLoadedTimeChart(id: string, items: AnalysisItem[]) {
+export function idleLoadedTimePlot(id: string, items: AnalysisItem[]) {
   clearChildOf(id);
   const s = new PlotSettings(600, 450, { x: 40, y: 40 });
   const svg = createCanvas(id, s);
@@ -35,7 +35,7 @@ export function idleLoadedTimeChart(id: string, items: AnalysisItem[]) {
   plotLine(svg, x, y, loadData, "rgb(60, 180, 75)");
 }
 
-export function idleLoadedProbChart(id: string, items: AnalysisItem[]) {
+export function idleLoadedProbPlot(id: string, items: AnalysisItem[]) {
   clearChildOf(id);
   const s = new PlotSettings(600, 450, { x: 40, y: 40 });
   const svg = createCanvas(id, s);
@@ -54,7 +54,7 @@ export function idleLoadedProbChart(id: string, items: AnalysisItem[]) {
   plotLine(svg, x, y, loadData, "rgb(60, 180, 75)");
 }
 
-export function demandsChart(id: string, items: AnalysisItem[]) {
+export function demandsPlot(id: string, items: AnalysisItem[]) {
   clearChildOf(id);
   const s = new PlotSettings(600, 450, { x: 40, y: 40 });
   const svg = createCanvas(id, s);
@@ -86,7 +86,7 @@ export function demandsChart(id: string, items: AnalysisItem[]) {
   addLabels(svg, s, "t", "N");
 }
 
-export function averageTimeChart(id: string, items: AnalysisItem[]) {
+export function averageTimePlot(id: string, items: AnalysisItem[]) {
   clearChildOf(id);
   const s = new PlotSettings(600, 450, { x: 40, y: 40 });
   const svg = createCanvas(id, s);

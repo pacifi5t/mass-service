@@ -18,10 +18,10 @@
   });
 
   function createPlots(items: sys.AnalysisItem[]) {
-    charts.idleLoadedTimeChart("idle-loaded", items);
-    charts.idleLoadedProbChart("idle-loaded-prob", items);
-    charts.demandsChart("serviced-not-system", items);
-    charts.averageTimeChart("avg-time", items);
+    charts.idleLoadedTimePlot("idle-loaded", items);
+    charts.idleLoadedProbPlot("idle-loaded-prob", items);
+    charts.demandsPlot("serviced-not-system", items);
+    charts.averageTimePlot("avg-time", items);
   }
 </script>
 

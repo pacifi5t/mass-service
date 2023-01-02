@@ -1,6 +1,6 @@
 import * as d3 from "d3";
 
-export * from "./charts";
+export * from "./plots";
 
 export type SVG = d3.Selection<SVGGElement, unknown, HTMLElement, unknown>;
 
